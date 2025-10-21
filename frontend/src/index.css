@@ -10,6 +10,7 @@ body {
   --bs-border-color: rgba(255,255,255,0.12);
   --bs-card-bg: #151b23;
   --bs-card-border-color: rgba(255,255,255,0.12);
+  --bs-secondary-bg: #1b2230;
   --bs-secondary-color: #9ca3af;
   background-color: var(--bs-body-bg);
   color: var(--bs-body-color);
@@ -32,6 +33,13 @@ body {
 
 /* Softer muted text for dark background */
 .text-muted { color: var(--bs-secondary-color) !important; }
+
+/* List groups in dark theme */
+.list-group-item {
+  background-color: transparent;
+  color: var(--bs-body-color);
+  border-color: var(--bs-border-color);
+}
 .bg-body-secondary{
   --bs-bg-opacity: 0 !important;
 }
