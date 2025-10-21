@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
-import LoginScreen from './components/LoginScreen';
+import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import TaskDetail from './pages/TaskDetail';
 import Navbar from './components/Navbar';
@@ -85,20 +85,23 @@ function App() {
 
   return (
     <div>
-      <Navbar user={user} onLogout={handleLogout} />
+      {location.pathname !== '/' && <Navbar user={user} onLogout={handleLogout} />}
 
-      <main style={{ paddingTop: 74 }}>
-        <div className="container">
-          {error && (
-            <div className="alert alert-danger alert-dismissible fade show" role="alert">
-              {error}
-              <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" />
-            </div>
-          )}
-        </div>
+      <main style={{width: '100vw'}}>
+        {location.pathname !== '/' && (
+          <div className="container">
+            {error && (
+              <div className="alert alert-danger alert-dismissible fade show" role="alert">
+                {error}
+                <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" />
+              </div>
+            )}
+          </div>
+        )}
 
         <Routes>
-          <Route path="/" element={user ? <Dashboard user={user} onLogout={handleLogout} /> : <LoginScreen />} />
+          <Route path="/" element={<Login />} />
+          <Route path="/dashboard" element={user ? <Dashboard user={user} onLogout={handleLogout} /> : <Login />} />
           <Route path="/task/:id" element={<TaskDetail user={user} checkAuthStatus={checkAuthStatus} />} />
           <Route path="/profile" element={<Profile user={user} />} />
           <Route path="/settings" element={<Settings />} />
