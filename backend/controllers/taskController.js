@@ -1,4 +1,4 @@
-const { getClickUpTasksByList, getClickUpTask, getListStatuses, createTaskInList, updateTask } = require('../utils/clickup');
+const { getClickUpTasksByList, getClickUpTask, getListStatuses, createTaskInList, updateTask, createClickUpSubtask } = require('../utils/clickup');
 
 // Helper: accept either a numeric list id or a full ClickUp list URL and extract the id
 function extractListId(input) {
@@ -78,6 +78,59 @@ const updateTaskHandler = async (req, res) => {
   }
 };
 
+// Create a subtask under a parent task id from URL param
+const createSubtaskByParam = async (req, res) => {
+  try {
+    const parentId = req.params.id;
+    if (!parentId) return res.status(400).json({ error: 'parent task id is required' });
+    // Accept a subset of ClickUp task fields
+    const payload = {
+      name: req.body.name,
+      description: req.body.description,
+      status: req.body.status,
+      assignees: req.body.assignees,
+      due_date: req.body.due_date,
+      start_date: req.body.start_date,
+      priority: req.body.priority,
+      tags: req.body.tags
+    };
+    const created = await createClickUpSubtask(req.user.clickupToken, parentId, payload);
+    res.status(201).json(created);
+  } catch (err) {
+    const details = err.response?.data || err.message;
+    const status = err.response?.status || 500;
+    console.error('Failed to create subtask:', details);
+    res.status(status).json({ error: 'Failed to create subtask', details });
+  }
+};
+
+// Create a subtask using body.parent_task_id (convenience endpoint)
+const createSubtask = async (req, res) => {
+  try {
+    const parentId = req.body.parent_task_id || req.body.parentId;
+    if (!parentId) return res.status(400).json({ error: 'parent_task_id is required' });
+    const payload = {
+      name: req.body.name,
+      description: req.body.description,
+      status: req.body.status,
+      assignees: req.body.assignees,
+      due_date: req.body.due_date,
+      start_date: req.body.start_date,
+      priority: req.body.priority,
+      tags: req.body.tags
+    };
+    const created = await createClickUpSubtask(req.user.clickupToken, parentId, payload);
+    res.status(201).json(created);
+  } catch (err) {
+    const details = err.response?.data || err.message;
+    const status = err.response?.status || 500;
+    console.error('Failed to create subtask:', details);
+    res.status(status).json({ error: 'Failed to create subtask', details });
+  }
+};
+
 module.exports.getStatuses = getStatuses;
 module.exports.createTask = createTask;
 module.exports.updateTask = updateTaskHandler;
+module.exports.createSubtaskByParam = createSubtaskByParam;
+module.exports.createSubtask = createSubtask;

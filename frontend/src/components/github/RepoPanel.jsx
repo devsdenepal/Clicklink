@@ -46,8 +46,12 @@ export default function RepoPanel({ repo, parentTaskId }) {
 
   const createSubtask = async (issueNumber) => {
     try {
-      const body = { repo, issue_number: issueNumber, parent_task_id: parentTaskId };
-  const res = await api.post('/api/github/create-subtask', body);
+      const body = {
+        parent_task_id: parentTaskId,
+        name: `[GitHub Issue #${issueNumber}] ${repo}`,
+        description: `Imported from GitHub issue ${repo}#${issueNumber}`
+      };
+  const res = await api.post('/api/tasks/subtasks', body);
       if (!res.ok) throw new Error(await res.text());
       return await res.json();
     } catch (e) {

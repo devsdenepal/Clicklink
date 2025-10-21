@@ -32,9 +32,14 @@ export default function GitHubPanel({ owner, repo, since }) {
 
   const handleCreateSubtask = async (issueNumber) => {
     try {
-      // parent_task_id is the current task id in URL; the page should pass as prop; for now assume global
+      // Use ClickUp subtask endpoint directly; requires a valid parent task id
       const parent_task_id = window.__CURRENT_TASK_ID__;
-      const res = await api.post('/api/github/create-subtask', { repo: `${owner}/${repo}`, issue_number: issueNumber, parent_task_id });
+      const payload = {
+        parent_task_id,
+        name: `[GitHub Issue #${issueNumber}] ${owner}/${repo}`,
+        description: `Imported from GitHub issue ${owner}/${repo}#${issueNumber}`
+      };
+      const res = await api.post('/api/tasks/subtasks', payload);
       if (!res.ok) throw new Error(await res.text());
       const j = await res.json();
       setMsg({ type: 'success', text: `Created subtask: ${JSON.stringify(j)}` });

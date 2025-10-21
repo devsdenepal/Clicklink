@@ -77,11 +77,11 @@ export default function TaskDetail({ user, checkAuthStatus }) {
     try {
       if (!user) return setError('Not logged in to ClickUp. Please connect your account.');
       if (!task || !task.id) return setError('Task id missing - reopen from the dashboard to enable subtask creation');
-      const res = await api.post('/api/github/create-subtask', { 
-        repo, 
-        issue_number: issueNumber, 
-        parent_task_id: task.id 
-      });
+      const payload = {
+        name: `[GitHub Issue #${issueNumber}] ${repo}`,
+        description: `Imported from GitHub issue ${repo}#${issueNumber}`
+      };
+      const res = await api.post(`/api/tasks/${task.id}/subtasks`, payload);
       const data = await res.json();
       return data;
     } catch (e) {
