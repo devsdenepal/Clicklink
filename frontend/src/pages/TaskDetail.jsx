@@ -25,6 +25,7 @@ export default function TaskDetail({ user, checkAuthStatus }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [subtasksIndex, setSubtasksIndex] = useState(new Set());
 
   useEffect(() => {
     let mounted = true;
@@ -49,6 +50,46 @@ export default function TaskDetail({ user, checkAuthStatus }) {
           // Not logged in: we can still render GitHub data if the Link passed task state
           // Otherwise, skip fetching ClickUp task to avoid 401 noise
         }
+        // If logged in, fetch existing subtasks to filter issues already tracked as subtasks
+        if (user) {
+          try {
+            const subsRes = await api.get(`/api/tasks/${id}/subtasks`);
+            const subsJson = await subsRes.json();
+            const subs = subsJson.subtasks || [];
+            const idx = new Set();
+            const nameRe = /GitHub Issue\s*#(\d+)/i;
+            const descRe = /([\-\w\.]+\/[\-\w\.]+)#(\d+)/i;
+            for (const s of subs) {
+              const n = s.name || '';
+              const d = s.description || '';
+              let issueNum = null;
+              let repoFromName = null;
+              // Try to extract from name pattern we create
+              const mName = n.match(/\[GitHub Issue\s*#(\d+)\]\s+([\-\w\.]+\/[\-\w\.]+)/i);
+              if (mName) {
+                issueNum = mName[1];
+                repoFromName = mName[2];
+                idx.add(`${repoFromName}#${issueNum}`);
+                continue;
+              }
+              // Fallback: extract from description "owner/repo#123"
+              const mDesc = d.match(descRe);
+              if (mDesc) {
+                idx.add(`${mDesc[1]}#${mDesc[2]}`);
+                continue;
+              }
+              // Last fallback: just index by issue number if found (less precise)
+              const mIssueOnly = n.match(nameRe);
+              if (mIssueOnly && Array.isArray(reposList)) {
+                for (const r of reposList) idx.add(`${r}#${mIssueOnly[1]}`);
+              }
+            }
+            if (mounted) setSubtasksIndex(idx);
+          } catch (e) {
+            // Non-fatal: just means we can't filter
+          }
+        }
+
         // fetch GitHub data for each repo (public API)
         const gdata = {};
         for (const r of reposList) {
@@ -145,7 +186,9 @@ export default function TaskDetail({ user, checkAuthStatus }) {
                     <div>
                       <h6>Open issues</h6>
                       <ul className="list-group">
-                        {gd.issues.map(issue => (
+                        {gd.issues
+                          .filter(issue => !subtasksIndex.has(`${r}#${issue.number}`))
+                          .map(issue => (
                           <li key={issue.id} className="list-group-item d-flex justify-content-between align-items-start">
                             <div>
                               <div><strong>#{issue.number}</strong> {issue.title}</div>

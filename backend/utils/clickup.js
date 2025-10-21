@@ -207,3 +207,37 @@ module.exports = {
   createTaskInList,
   updateTask
 };
+
+// Fetch all direct subtasks of a parent task by:
+// 1) Fetching the parent task to get its list id and canonical task id
+// 2) Listing tasks in that list with subtasks=true and filtering by parent
+async function getClickUpSubtasks(clickupToken, parentTaskId) {
+  // Resolve parent canonical id and list id
+  const parentTask = await getClickUpTask(clickupToken, parentTaskId);
+  const parentListId = parentTask?.list?.id || parentTask?.list_id || parentTask?.listId;
+  const canonicalParentId = parentTask?.id || String(parentTaskId);
+  if (!parentListId) {
+    const err = new Error('Unable to resolve parent task list for subtasks');
+    err.code = 'PARENT_LIST_UNKNOWN';
+    throw err;
+  }
+
+  // Get tasks in list including subtasks and filter by parent
+  const res = await axios.get(`https://api.clickup.com/api/v2/list/${parentListId}/task`, {
+    headers: { Authorization: `Bearer ${clickupToken}` },
+    httpsAgent,
+    params: {
+      subtasks: true,
+      include_closed: true,
+      page: 0
+    }
+  });
+  const tasks = Array.isArray(res.data?.tasks) ? res.data.tasks : [];
+  const children = tasks.filter(t => {
+    const p = t.parent || t.parent_id || (t.parent && t.parent.id);
+    return p && String(p) === String(canonicalParentId);
+  });
+  return children;
+}
+
+module.exports.getClickUpSubtasks = getClickUpSubtasks;

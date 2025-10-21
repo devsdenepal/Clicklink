@@ -1,4 +1,4 @@
-const { getClickUpTasksByList, getClickUpTask, getListStatuses, createTaskInList, updateTask, createClickUpSubtask } = require('../utils/clickup');
+const { getClickUpTasksByList, getClickUpTask, getListStatuses, createTaskInList, updateTask, createClickUpSubtask, getClickUpSubtasks } = require('../utils/clickup');
 
 // Simple in-memory lock map to avoid duplicate rapid subtask creations
 const inFlightSubtask = new Map();
@@ -160,3 +160,18 @@ module.exports.createTask = createTask;
 module.exports.updateTask = updateTaskHandler;
 module.exports.createSubtaskByParam = createSubtaskByParam;
 module.exports.createSubtask = createSubtask;
+
+// List existing subtasks for a parent task
+module.exports.getSubtasks = async (req, res) => {
+  try {
+    const parentId = req.params.id;
+    if (!parentId) return res.status(400).json({ error: 'parent task id is required' });
+    const subs = await getClickUpSubtasks(req.user.clickupToken, parentId);
+    res.json({ subtasks: subs });
+  } catch (err) {
+    const details = err.response?.data || err.message;
+    const status = err.response?.status || 500;
+    console.error('Failed to fetch subtasks:', details);
+    res.status(status).json({ error: 'Failed to fetch subtasks', details });
+  }
+};
