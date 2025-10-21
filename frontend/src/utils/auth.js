@@ -29,25 +29,34 @@ const handleResponse = async (res) => {
   if (res.ok) return res;
 
   const contentType = res.headers.get('content-type');
-  let error = { status: res.status };
-
+  let body = null;
   if (contentType && contentType.includes('application/json')) {
-    const data = await res.json();
-    error.data = data;
-    error.code = data.code;
-    error.message = data.error || 'Request failed';
+    try { body = await res.json(); } catch {}
   } else {
-    error.message = await res.text();
+    try { body = await res.text(); } catch {}
+  }
+
+  let message = (body && (body.error || body.message)) || (typeof body === 'string' ? body : 'Request failed');
+  // If backend provided 'details', include it in the message to aid debugging
+  if (body && body.details) {
+    const det = typeof body.details === 'string' ? body.details : (body.details.message || JSON.stringify(body.details));
+    if (det && det !== message) message += `: ${det}`;
+  }
+  const err = new Error(message);
+  err.status = res.status;
+  if (body && typeof body === 'object') {
+    err.code = body.code;
+    err.data = body;
   }
 
   if (res.status === 401) {
-    if (error.code === 'TOKEN_EXPIRED' || error.code === 'TOKEN_INVALID') {
+    if (err.code === 'TOKEN_EXPIRED' || err.code === 'TOKEN_INVALID') {
       removeToken();
       window.location.href = '/'; // Redirect to login
     }
   }
 
-  throw error;
+  throw err;
 };
 
 // API client with auth header and error handling

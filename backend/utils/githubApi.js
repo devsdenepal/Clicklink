@@ -1,13 +1,17 @@
 const axios = require('axios');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 
-const GITHUB_API = 'https://api.github.com';
+const GITHUB_API = process.env.GITHUB_API_BASE || 'https://api.github.com';
 const TOKEN = process.env.GITHUB_TOKEN;
+const httpsProxy = process.env.HTTPS_PROXY || process.env.https_proxy;
+const httpsAgent = httpsProxy ? new HttpsProxyAgent(httpsProxy) : undefined;
 
 if (!TOKEN) console.warn('GITHUB_TOKEN not set; GitHub API calls will fail.');
 
 const client = axios.create({
   baseURL: GITHUB_API,
-  headers: { Authorization: TOKEN ? `token ${TOKEN}` : undefined, Accept: 'application/vnd.github.v3+json' }
+  headers: { Authorization: TOKEN ? `token ${TOKEN}` : undefined, Accept: 'application/vnd.github.v3+json' },
+  httpsAgent
 });
 
 async function listIssues(owner, repo, since) {

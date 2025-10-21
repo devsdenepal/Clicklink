@@ -3,7 +3,10 @@
 .DS_Store
 node_modules/
 dist/
+# Ignore env files at root and nested folders
 .env
+**/.env
+backend/.env
 .idea/
 .vscode/
 *.bak

@@ -90,7 +90,8 @@ export default function DashboardPage({ user }) {
     setSyncing(true);
     setError(null);
     try {
-  const res = await api.post('/api/github/sync', {});
+      const parentTaskId = import.meta.env.VITE_CLICKUP_PARENT_TASK_ID;
+      const res = await api.post('/api/github/sync', { parent_task_id: parentTaskId });
       if (res.status === 401) { setError('Not authenticated'); return; }
       const data = await res.json();
       const created = (data.created && data.created.length) ? data.created.length : (data.created || 0);

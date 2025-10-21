@@ -48,7 +48,11 @@ const getClickUpTask = async (clickupToken, taskId) => {
 const createClickUpSubtask = async (clickupToken, parentTaskId, subtask) => {
     const url = `https://api.clickup.com/api/v2/task/${parentTaskId}/subtask`;
     const subtaskRes = await axios.post(url, subtask, {
-        headers: { Authorization: `Bearer ${clickupToken}` },
+        headers: { 
+          Authorization: `Bearer ${clickupToken}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
         httpsAgent
     });
     return subtaskRes.data;
@@ -64,7 +68,11 @@ const getListStatuses = async (clickupToken, listId) => {
 
 const createTaskInList = async (clickupToken, listId, payload) => {
   const res = await axios.post(`https://api.clickup.com/api/v2/list/${listId}/task`, payload, {
-    headers: { Authorization: `Bearer ${clickupToken}` },
+    headers: { 
+      Authorization: `Bearer ${clickupToken}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
     httpsAgent
   });
   return res.data;
@@ -72,7 +80,11 @@ const createTaskInList = async (clickupToken, listId, payload) => {
 
 const updateTask = async (clickupToken, taskId, payload) => {
   const res = await axios.put(`https://api.clickup.com/api/v2/task/${taskId}`, payload, {
-    headers: { Authorization: `Bearer ${clickupToken}` },
+    headers: { 
+      Authorization: `Bearer ${clickupToken}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
     httpsAgent
   });
   return res.data;
