@@ -43,7 +43,12 @@ async function getDefaultTeamId(clickupToken) {
 const getClickUpTasksByList = async (clickupToken, listId) => {
   const tasksRes = await axios.get(`https://api.clickup.com/api/v2/list/${listId}/task`, {
     headers: { Authorization: `Bearer ${clickupToken}` },
-    httpsAgent
+    httpsAgent,
+    params: {
+      include_closed: true,
+      subtasks: false,
+      page: 0
+    }
   });
   return tasksRes.data.tasks;
 };
