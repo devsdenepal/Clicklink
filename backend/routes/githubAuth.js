@@ -16,7 +16,7 @@ router.get('/github', (req, res) => {
   const carry = req.query.carry || null;
   const stateObj = { k: Date.now().toString(36), carry };
   const state = encodeURIComponent(JSON.stringify(stateObj));
-  const scope = encodeURIComponent('repo read:user');
+  const scope = encodeURIComponent('repo read:user read:org');
   const redirect = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(GITHUB_REDIRECT_URI)}&scope=${scope}&state=${state}`;
   res.redirect(redirect);
 });

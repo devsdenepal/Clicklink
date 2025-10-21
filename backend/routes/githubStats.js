@@ -4,6 +4,8 @@ const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
+const API_BASE = process.env.GITHUB_API_BASE || 'https://api.github.com';
+
 function ghHeaders(token) {
   return {
     Authorization: `Bearer ${token}`,
@@ -16,8 +18,59 @@ router.get('/repos', requireAuth, async (req, res) => {
   try {
     const token = req.user.githubToken;
     if (!token) return res.status(400).json({ error: 'GitHub token missing' });
-    const r = await axios.get('https://api.github.com/user/repos?per_page=100', { headers: ghHeaders(token) });
-    res.json(r.data);
+
+    // Helper to paginate GitHub GET requests using Link header
+    const paginate = async (url) => {
+      let results = [];
+      let nextUrl = url;
+      for (let i = 0; i < 10 && nextUrl; i++) { // cap at 10 pages defensively
+        const resp = await axios.get(nextUrl, { headers: ghHeaders(token) });
+        if (Array.isArray(resp.data)) results = results.concat(resp.data);
+        const link = resp.headers && resp.headers.link;
+        if (!link) break;
+        const m = link.split(',').map(s => s.trim()).find(s => s.endsWith('rel="next"'));
+        if (m) {
+          const mm = /<(.*?)>/.exec(m);
+          nextUrl = mm ? mm[1] : null;
+        } else {
+          nextUrl = null;
+        }
+      }
+      return results;
+    };
+
+    // 1) User repos across pages
+    const userRepos = await paginate(`${API_BASE}/user/repos?per_page=100&affiliation=owner,collaborator,organization_member&sort=updated`);
+
+    // 2) Orgs
+    let orgs = [];
+    try {
+      orgs = await paginate(`${API_BASE}/user/orgs?per_page=100`);
+    } catch (e) {
+      // If missing read:org or SSO not authorized, return what we have but include diagnostic
+    }
+
+    // 3) For each org, fetch repos
+    let orgRepos = [];
+    for (const org of orgs) {
+      const login = org.login;
+      if (!login) continue;
+      try {
+        const repos = await paginate(`${API_BASE}/orgs/${login}/repos?per_page=100&type=all&sort=updated`);
+        orgRepos = orgRepos.concat(repos);
+      } catch (e) {
+        // skip inaccessible org
+      }
+    }
+
+    // Merge and de-duplicate by full_name
+    const map = new Map();
+    for (const r of [...userRepos, ...orgRepos]) {
+      if (!r || !r.full_name) continue;
+      if (!map.has(r.full_name)) map.set(r.full_name, r);
+    }
+    const merged = Array.from(map.values());
+    res.json(merged);
   } catch (e) {
     const status = e.response?.status || 500;
     res.status(status).json({ error: 'Failed to fetch repos', details: e.response?.data || e.message });
