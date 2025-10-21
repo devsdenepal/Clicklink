@@ -1,146 +1,148 @@
-import React, { useEffect, useState } from 'react';
-import TaskList from '../components/TaskList';
-import TaskModal from '../components/TaskModal';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/auth';
 
-/**
- * Dashboard
- * - Top bar: New Task button (opens modal), Sync All button (top-right) and last sync time
- * - Search / filter bar
- * - Task list (click title to open TaskDetail)
- * - Uses fetch(..., { credentials: 'include' }) for all backend calls
- */
-export default function DashboardPage({ user }) {
+export default function Dashboard() {
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
+  const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [statuses, setStatuses] = useState([]);
-  const [success, setSuccess] = useState(null);
-  const [updatingTaskId, setUpdatingTaskId] = useState(null);
-  const [syncing, setSyncing] = useState(false);
-  const [lastSync, setLastSync] = useState(null);
-  const [query, setQuery] = useState('');
-  const [showModal, setShowModal] = useState(false);
 
-  const fetchTasks = async () => {
+  const listId = import.meta.env.VITE_CLICKUP_LIST_ID;
+
+  const load = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const listId = import.meta.env.VITE_CLICKUP_LIST_ID;
-      const url = listId ? `/api/tasks?list_id=${encodeURIComponent(listId)}` : '/api/tasks';
-  const res = await api.get(url);
-      if (res.status === 401) return setTasks([]);
-      if (!res.ok) throw new Error(await res.text());
-      const data = await res.json();
-      setTasks(data.tasks || []);
-    } catch (err) {
-      setError(String(err));
+      const tasksUrl = listId ? `/api/tasks?list_id=${encodeURIComponent(listId)}` : '/api/tasks';
+      const statusUrl = listId ? `/api/tasks/statuses?list_id=${encodeURIComponent(listId)}` : '/api/tasks/statuses';
+      const [tr, sr] = await Promise.all([api.get(tasksUrl), api.get(statusUrl)]);
+      const tJson = await tr.json();
+      const sJson = await sr.json();
+      setTasks(Array.isArray(tJson.tasks) ? tJson.tasks : []);
+      setStatuses(Array.isArray(sJson.statuses) ? sJson.statuses : []);
+    } catch (e) {
+      setError(e?.message || 'Failed to load dashboard');
+      if (e && e.status === 401) navigate('/');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStatuses = async () => {
-    try {
-      const listId = import.meta.env.VITE_CLICKUP_LIST_ID;
-      const url = listId ? `/api/tasks/statuses?list_id=${encodeURIComponent(listId)}` : '/api/tasks/statuses';
-  const res = await api.get(url);
-      if (!res.ok) return;
-      const data = await res.json();
-      setStatuses(data.statuses || []);
-    } catch (e) {
-      // ignore
-    }
+  useEffect(() => { load(); }, []);
+
+  const normalize = (s) => {
+    if (!s) return 'Other';
+    const v = (typeof s === 'string' ? s : (s.status || s.name || '')).toLowerCase();
+    const vn = v.replace(/\s|-/g, ''); // remove spaces and hyphens for matching
+    if (v.includes('progress') || vn.includes('inprogress')) return 'In Progress';
+    if (v.includes('review') || v.includes('pr')) return 'Review';
+    if (v.includes('done') || v.includes('close') || v.includes('complete')) return 'Done';
+    if (v.includes('open') || vn.includes('todo') || v.includes('backlog') || v.includes('to do')) return 'Open';
+    return 'Other';
   };
 
-  useEffect(() => { if (user) { fetchTasks(); fetchStatuses(); } }, [user]);
+  const counts = useMemo(() => {
+    const c = { 'Open': 0, 'In Progress': 0, 'Review': 0, 'Done': 0, 'Other': 0 };
+    for (const t of tasks) c[normalize(t.status)] = (c[normalize(t.status)] || 0) + 1;
+    return c;
+  }, [tasks]);
 
-  const handleCreate = async payload => {
-    try {
-      const listId = import.meta.env.VITE_CLICKUP_LIST_ID;
-      if (listId) payload.list_id = listId;
-      const res = await api.post('/api/tasks', payload);
-      setShowModal(false);
-      await fetchTasks();
-      await fetchStatuses();
-      setSuccess('Task created');
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      setError(err?.message || 'Failed to create task');
-    }
-  };
+  const total = tasks.length;
+  const pct = (n) => (total ? Math.round((n / total) * 100) : 0);
 
-  const handleStatusChange = async (task, newStatus) => {
-    setUpdatingTaskId(task.id);
-    try {
-      const body = { status: newStatus };
-      const res = await api.put(`/api/tasks/${task.id}`, body);
-      if (!res.ok) throw new Error(await res.text());
-      await fetchTasks();
-    } catch (err) {
-      setError(String(err));
-    } finally {
-      setUpdatingTaskId(null);
-    }
-  };
-
-  // Refresh tasks from ClickUp using backend sync endpoint
-  const handleSyncAll = async () => {
-    if (syncing) return;
-    setSyncing(true);
-    setError(null);
-    try {
-      const listId = import.meta.env.VITE_CLICKUP_LIST_ID;
-      const syncUrl = listId ? `/api/tasks/sync?list_id=${encodeURIComponent(listId)}` : '/api/tasks/sync';
-      const res = await api.post(syncUrl, {});
-      if (!res.ok) throw new Error(await res.text());
-      const data = await res.json();
-      setTasks(data.tasks || []);
-      await fetchStatuses();
-      setSuccess(`Tasks synced${typeof data.count === 'number' ? ` (${data.count})` : ''}`);
-      setLastSync(new Date().toISOString());
-      setTimeout(() => setSuccess(null), 5000);
-    } catch (err) {
-      setError(String(err));
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  const filtered = tasks.filter(t => !query || (t.name && t.name.toLowerCase().includes(query.toLowerCase())));
+  const recent = useMemo(() => {
+    const byDate = [...tasks].sort((a, b) => {
+      const ad = Number(a.date_created || a.date_updated || 0);
+      const bd = Number(b.date_created || b.date_updated || 0);
+      return bd - ad;
+    });
+    return byDate.slice(0, 10);
+  }, [tasks]);
 
   return (
-    <div className="container-lg">
-      <div className="d-flex align-items-center justify-content-between mt-3 mb-2">
-        <h3 className="mb-0">Tasks</h3>
-        <div className="d-flex align-items-center">
-          <div className="me-2 text-end" style={{ minWidth: 160 }}>
-            <div className="small text-muted">Last sync</div>
-            <div>{lastSync ? new Date(lastSync).toLocaleString() : 'never'}</div>
+    <div className="container-lg py-3">
+      <div className="d-flex align-items-center justify-content-between mb-3">
+        <h3 className="mb-0">Dashboard</h3>
+        <button className="btn btn-outline-secondary btn-sm" onClick={load} disabled={loading}>
+          {loading ? <><span className="spinner-border spinner-border-sm me-2" />Loading…</> : 'Refresh'}
+        </button>
+      </div>
+
+      {error && <div className="alert alert-danger">{error}</div>}
+      {loading && !tasks.length ? (
+        <div className="d-flex justify-content-center py-5">
+          <div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading…</span></div>
+        </div>
+      ) : (
+        <>
+          {/* Status summary cards */}
+          <div className="row g-3 mb-3">
+            {['Open', 'In Progress', 'Review', 'Done'].map(key => (
+              <div key={key} className="col-6 col-md-3">
+                <div className="card h-100">
+                  <div className="card-body">
+                    <div className="text-muted small">{key}</div>
+                    <div className="h4 mb-2">{counts[key] || 0}</div>
+                    <div className="progress" role="progressbar" aria-label={`${key} share`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={pct(counts[key] || 0)}>
+                      <div className="progress-bar" style={{ width: `${pct(counts[key] || 0)}%` }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-          <button className="btn btn-outline-secondary me-2" onClick={() => setShowModal(true)}>New Task</button>
-          <button className="btn btn-primary" onClick={handleSyncAll} disabled={syncing}>
-            {syncing ? <><span className="spinner-border spinner-border-sm me-2"></span>Syncing…</> : 'Sync All'}
-          </button>
-        </div>
-      </div>
 
-      <div className="row mb-3">
-        <div className="col-12 col-md-6">
-          <input className="form-control" placeholder="Search tasks by title…" value={query} onChange={e => setQuery(e.target.value)} />
-        </div>
-      </div>
+          {/* Quick totals */}
+          <div className="card mb-3">
+            <div className="card-body d-flex justify-content-between">
+              <div>Total tasks: <strong>{total}</strong></div>
+              <div className="text-muted small">Open {pct(counts['Open'])}% · In Progress {pct(counts['In Progress'])}% · Review {pct(counts['Review'])}% · Done {pct(counts['Done'])}%</div>
+            </div>
+          </div>
 
-      <div className="row">
-        <div className="col-12">
-          {loading ? <div>Loading tasks…</div> : <TaskList tasks={filtered} onStatusChange={handleStatusChange} statuses={statuses} updatingTaskId={updatingTaskId} />}
-        </div>
-      </div>
-
-      {error && <div className="alert alert-danger mt-3">{error}</div>}
-      {success && <div className="alert alert-success mt-3">{success}</div>}
-
-  <TaskModal show={showModal} onClose={() => setShowModal(false)} onCreate={handleCreate} user={user} />
+          {/* Recent tasks table */}
+          <div className="card">
+            <div className="card-body">
+              <h5 className="card-title">Recent tasks</h5>
+              <div className="table-responsive">
+                <table className="table table-sm align-middle table-hover">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '50%' }}>Title</th>
+                      <th style={{ width: '25%' }}>Assignee</th>
+                      <th style={{ width: '25%' }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recent.map(t => {
+                      const assignee = Array.isArray(t.assignees) && t.assignees.length ? (t.assignees[0].username || t.assignees[0].email || t.assignees[0].id) : '—';
+                      const statusLabel = typeof t.status === 'string' ? t.status : (t.status?.status || t.status?.name || '—');
+                      const title = t.name || t.title || t.text || 'Untitled';
+                      return (
+                        <tr key={t.id}
+                            className="cursor-pointer"
+                            role="link"
+                            tabIndex={0}
+                            onClick={() => navigate(`/task/${t.id}`, { state: { task: t } })}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/task/${t.id}`, { state: { task: t } }); }}>
+                          <td>{title}</td>
+                          <td>{assignee}</td>
+                          <td>{statusLabel}</td>
+                        </tr>
+                      );
+                    })}
+                    {recent.length === 0 && (
+                      <tr><td colSpan="3" className="text-muted">No tasks found.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import TaskDetail from './pages/TaskDetail';
 import Profile from './pages/Profile';
+import Tasks from './pages/Tasks';
 import Settings from './pages/Settings';
 import { api, getToken, setToken, removeToken } from './utils/auth';
 import MainLayout from './layouts/MainLayout';
@@ -100,8 +101,8 @@ function App() {
             <Route path="/task/:id" element={<TaskDetail user={user} checkAuthStatus={checkAuthStatus} />} />
             <Route path="/me" element={<Profile user={user} />} />
             <Route path="/settings" element={<Settings />} />
-            {/* Placeholder routes to match sidebar */}
-            <Route path="/tasks" element={<Dashboard user={user} onLogout={handleLogout} />} />
+            {/* Tasks list page (original detailed view) */}
+            <Route path="/tasks" element={<Tasks user={user} />} />
             <Route path="/members" element={<Profile user={user} />} />
           </Route>
         </Routes>
