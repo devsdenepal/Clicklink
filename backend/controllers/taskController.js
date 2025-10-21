@@ -68,6 +68,10 @@ const createTask = async (req, res) => {
     const payload = { ...req.body };
     if (!payload.name && payload.title) payload.name = payload.title;
     delete payload.title; // ClickUp doesn't accept 'title'
+    // If assignees array provided, ensure numeric ids as per ClickUp API
+    if (Array.isArray(payload.assignees)) {
+      payload.assignees = payload.assignees.map(a => Number(a)).filter(Boolean);
+    }
     const created = await createTaskInList(req.user.clickupToken, listId, payload);
     res.status(201).json(created);
   } catch (err) {
