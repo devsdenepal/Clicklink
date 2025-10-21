@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../utils/auth';
 
 /**
@@ -20,6 +20,7 @@ function extractReposFromText(text) {
 export default function TaskDetail({ user, checkAuthStatus }) {
   const { id } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const [task, setTask] = useState(null);
   const [repos, setRepos] = useState([]);
   const [githubData, setGithubData] = useState({});
@@ -27,6 +28,9 @@ export default function TaskDetail({ user, checkAuthStatus }) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [subtasksIndex, setSubtasksIndex] = useState(new Set());
+  const [subtasks, setSubtasks] = useState([]);
+  const [expanded, setExpanded] = useState(new Set());
+  const [updatingSubId, setUpdatingSubId] = useState(null);
   // Edit controls
   const [members, setMembers] = useState([]);
   const [statuses, setStatuses] = useState([]);
@@ -108,7 +112,10 @@ export default function TaskDetail({ user, checkAuthStatus }) {
                 for (const r of reposList) idx.add(`${r}#${mIssueOnly[1]}`);
               }
             }
-            if (mounted) setSubtasksIndex(idx);
+            if (mounted) {
+              setSubtasksIndex(idx);
+              setSubtasks(subs);
+            }
           } catch (e) {
             // Non-fatal: just means we can't filter
           }
@@ -193,6 +200,38 @@ export default function TaskDetail({ user, checkAuthStatus }) {
     }
   };
 
+  const toggleExpanded = (subId) => {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      if (next.has(subId)) next.delete(subId); else next.add(subId);
+      return next;
+    });
+  };
+
+  const bestDoneLabel = () => {
+    // prefer a status that looks like done/complete/closed
+    const labels = statuses.map(s => (s.status || s.name || '').toString());
+    const found = labels.find(l => /done|complete|closed/i.test(l));
+    return found || 'done';
+  };
+
+  const markSubtaskCompleted = async (sub) => {
+    if (!user || updatingSubId) return;
+    try {
+      setUpdatingSubId(sub.id);
+      const statusValue = bestDoneLabel();
+      await api.put(`/api/tasks/${sub.id}`, { status: statusValue });
+      // Update local state
+      setSubtasks(prev => prev.map(t => t.id === sub.id ? { ...t, status: statusValue } : t));
+      setSuccess('Subtask marked completed');
+      setTimeout(() => setSuccess(null), 2500);
+    } catch (e) {
+      setError(e?.message || 'Failed to update subtask');
+    } finally {
+      setUpdatingSubId(null);
+    }
+  };
+
   const nothingChanged = () => {
     if (!task) return true;
     const curName = task.name || '';
@@ -272,6 +311,49 @@ export default function TaskDetail({ user, checkAuthStatus }) {
             <h4>{task.name}</h4>
             <div className="small text-muted mb-2">Status: {task.status?.status || task.status || '—'}</div>
             <div className="mb-3"><pre style={{ whiteSpace: 'pre-wrap' }}>{task.description || '—'}</pre></div>
+          </div>
+
+          {/* Subtasks list */}
+          <div className="card p-3 mb-3">
+            <div className="d-flex justify-content-between align-items-center">
+              <h5 className="mb-0">Subtasks</h5>
+              <span className="badge bg-secondary">{subtasks.length}</span>
+            </div>
+            <div className="mt-3">
+              {subtasks.length === 0 ? (
+                <div className="text-muted">No subtasks.</div>
+              ) : (
+                <div className="d-flex flex-column gap-2">
+                  {subtasks.map(sub => {
+                    const statusLabel = typeof sub.status === 'string' ? sub.status : (sub.status?.status || sub.status?.name || '');
+                    const isOpen = expanded.has(sub.id);
+                    return (
+                      <div key={sub.id} className="card">
+                        <div className="card-body py-2 d-flex justify-content-between align-items-center">
+                          <div className="text-truncate" title={sub.name}>
+                            <strong>{sub.name}</strong>
+                            <span className="ms-2 small text-muted">{statusLabel || '—'}</span>
+                          </div>
+                          <button className="btn btn-sm btn-outline-secondary" onClick={() => toggleExpanded(sub.id)} aria-expanded={isOpen} aria-controls={`sub-${sub.id}`}>
+                            {isOpen ? '▾' : '▸'}
+                          </button>
+                        </div>
+                        {isOpen && (
+                          <div id={`sub-${sub.id}`} className="card-body pt-0 pb-3">
+                            <div className="d-flex gap-2">
+                              <button className="btn btn-sm btn-outline-primary" onClick={() => navigate(`/task/${sub.id}`, { state: { task: sub } })}>Open Subtask</button>
+                              <button className="btn btn-sm btn-success" onClick={() => markSubtaskCompleted(sub)} disabled={updatingSubId === sub.id}>
+                                {updatingSubId === sub.id ? <><span className="spinner-border spinner-border-sm me-2" />Marking…</> : 'Mark completed'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <div className="col-md-5">
