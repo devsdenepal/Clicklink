@@ -81,8 +81,8 @@ const handleCallback = async (req, res) => {
     // Generate JWT
     const token = generateToken(user);
 
-    // Redirect to frontend with token
-    res.redirect(`${FRONTEND_URL}?token=${token}`);
+  // Redirect to frontend with token (URL-safe)
+  res.redirect(`${FRONTEND_URL}?token=${encodeURIComponent(token)}`);
   } catch (err) {
     console.error('Token exchange failed:', err.response?.data || err.message);
     res.status(500).send('OAuth token exchange failed');

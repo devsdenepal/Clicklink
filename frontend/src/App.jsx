@@ -19,8 +19,15 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const token = params.get('token');
-    if (token) {
-      setToken(token);
+    // Fallback: support token in hash query too
+    let tokenFromHash = null;
+    if (!token && location.hash && location.hash.includes('token=')) {
+      const hp = new URLSearchParams(location.hash.replace(/^#/, ''));
+      tokenFromHash = hp.get('token');
+    }
+    const tkn = token || tokenFromHash;
+    if (tkn) {
+      setToken(tkn);
       // Immediately check auth status after setting the token
       checkAuthStatus(); 
       navigate(location.pathname, { replace: true });

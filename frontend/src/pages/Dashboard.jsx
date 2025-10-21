@@ -60,14 +60,13 @@ export default function DashboardPage({ user }) {
       const listId = import.meta.env.VITE_CLICKUP_LIST_ID;
       if (listId) payload.list_id = listId;
       const res = await api.post('/api/tasks', payload);
-      if (!res.ok) throw new Error(await res.text());
       setShowModal(false);
       await fetchTasks();
       await fetchStatuses();
       setSuccess('Task created');
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(String(err));
+      setError(err?.message || 'Failed to create task');
     }
   };
 
@@ -85,23 +84,22 @@ export default function DashboardPage({ user }) {
     }
   };
 
+  // Refresh tasks from ClickUp using backend sync endpoint
   const handleSyncAll = async () => {
     if (syncing) return;
     setSyncing(true);
     setError(null);
     try {
-      const parentTaskId = import.meta.env.VITE_CLICKUP_PARENT_TASK_ID;
-      const res = await api.post('/api/github/sync', { parent_task_id: parentTaskId });
-      if (res.status === 401) { setError('Not authenticated'); return; }
+      const listId = import.meta.env.VITE_CLICKUP_LIST_ID;
+      const syncUrl = listId ? `/api/tasks/sync?list_id=${encodeURIComponent(listId)}` : '/api/tasks/sync';
+      const res = await api.post(syncUrl, {});
+      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
-      const created = (data.created && data.created.length) ? data.created.length : (data.created || 0);
-      const skipped = (data.skipped && data.skipped.length) ? data.skipped.length : (data.skipped || 0);
-      const errs = Array.isArray(data.errors) ? data.errors.length : (data.errors ? 1 : 0);
-      setSuccess(`Sync complete: ${created} created, ${skipped} skipped, ${errs} errors`);
+      setTasks(data.tasks || []);
+      await fetchStatuses();
+      setSuccess(`Tasks synced${typeof data.count === 'number' ? ` (${data.count})` : ''}`);
       setLastSync(new Date().toISOString());
       setTimeout(() => setSuccess(null), 5000);
-      await fetchTasks();
-      await fetchStatuses();
     } catch (err) {
       setError(String(err));
     } finally {

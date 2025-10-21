@@ -64,7 +64,11 @@ const createTask = async (req, res) => {
     const raw = req.body.list_id || process.env.CLICKUP_LIST_ID;
     const listId = extractListId(raw);
     if (!listId) return res.status(400).json({ error: 'list_id is required' });
-    const created = await createTaskInList(req.user.clickupToken, listId, req.body);
+    // Normalize payload: frontend may send { title } instead of { name }
+    const payload = { ...req.body };
+    if (!payload.name && payload.title) payload.name = payload.title;
+    delete payload.title; // ClickUp doesn't accept 'title'
+    const created = await createTaskInList(req.user.clickupToken, listId, payload);
     res.status(201).json(created);
   } catch (err) {
     console.error('Failed to create task:', err.response?.data || err.message);
@@ -173,5 +177,19 @@ module.exports.getSubtasks = async (req, res) => {
     const status = err.response?.status || 500;
     console.error('Failed to fetch subtasks:', details);
     res.status(status).json({ error: 'Failed to fetch subtasks', details });
+  }
+};
+
+// Explicit sync endpoint for tasks: pulls latest tasks from ClickUp for the given list
+module.exports.syncTasks = async (req, res) => {
+  try {
+    const raw = req.body?.list_id || req.query.list_id || process.env.CLICKUP_LIST_ID;
+    const listId = extractListId(raw);
+    if (!listId) return res.status(400).json({ error: 'list_id is required' });
+    const tasks = await getClickUpTasksByList(req.user.clickupToken, listId);
+    res.json({ tasks, count: Array.isArray(tasks) ? tasks.length : 0, synced_at: new Date().toISOString() });
+  } catch (err) {
+    console.error('Failed to sync tasks:', err.response?.data || err.message);
+    res.status(500).json({ error: 'Failed to sync tasks' });
   }
 };
