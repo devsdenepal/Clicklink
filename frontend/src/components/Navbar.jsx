@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 export default function Navbar({ user, onLogout }) {
   return (
-  <nav className="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+  <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow-sm border-bottom border-secondary">
       <div className="container">
   <Link className="navbar-brand" to="/dashboard">Clicklink</Link>
         <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent" aria-controls="navContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,8 +20,8 @@ export default function Navbar({ user, onLogout }) {
           <div className="d-flex align-items-center">
             {user ? (
               <>
-                <div className="me-3">{user.username}</div>
-                <button className="btn btn-outline-danger btn-sm" onClick={onLogout}>Logout</button>
+                <div className="me-3 text-secondary">{user.username}</div>
+                <button className="btn btn-outline-light btn-sm" onClick={onLogout}>Logout</button>
               </>
             ) : (
               <Link className="btn btn-primary btn-sm" to="/">Login</Link>

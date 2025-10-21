@@ -4,4 +4,34 @@ html, body, #root {
 }
 body {
   margin: 0;
+  /* Dark theme base colors using Bootstrap CSS variables */
+  --bs-body-bg: #0f141a;
+  --bs-body-color: #e5e7eb;
+  --bs-border-color: rgba(255,255,255,0.12);
+  --bs-card-bg: #151b23;
+  --bs-card-border-color: rgba(255,255,255,0.12);
+  --bs-secondary-color: #9ca3af;
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+}
+
+/* Make cards and tables respect dark palette */
+.card {
+  background-color: var(--bs-card-bg);
+  border-color: var(--bs-card-border-color);
+}
+
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--bs-body-color);
+  --bs-table-striped-color: var(--bs-body-color);
+  --bs-table-striped-bg: rgba(255,255,255,0.03);
+  --bs-table-hover-color: var(--bs-body-color);
+  --bs-table-hover-bg: rgba(255,255,255,0.05);
+}
+
+/* Softer muted text for dark background */
+.text-muted { color: var(--bs-secondary-color) !important; }
+.bg-body-secondary{
+  --bs-bg-opacity: 0 !important;
 }

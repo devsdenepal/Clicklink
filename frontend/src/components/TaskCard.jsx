@@ -21,7 +21,7 @@ export default function TaskCard({ task, repo }) {
         </div>
         <div className="text-end">
           {repo && (
-            <div className="badge bg-light text-dark" style={{ border: '1px solid #ddd' }}>
+            <div className="badge bg-body-secondary text-light" style={{ border: '1px solid rgba(255,255,255,0.15)' }}>
               <img src="/assets/octocat.svg" alt="gh" style={{ width: 14, marginRight: 6 }} />
               {repo}
             </div>

@@ -165,7 +165,7 @@ export default function TaskDetail({ user, checkAuthStatus }) {
           {repos.map(r => {
             const gd = githubData[r];
             return (
-              <div key={r} className="card mb-3 bg-light">
+              <div key={r} className="card mb-3 bg-body-secondary">
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
