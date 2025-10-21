@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import TaskList from '../components/TaskList';
 import TaskModal from '../components/TaskModal';
 import { api } from '../utils/auth';
@@ -96,7 +97,11 @@ export default function TasksPage({ user }) {
   const filtered = tasks.filter(t => !query || (t.name && t.name.toLowerCase().includes(query.toLowerCase())));
 
   return (
-    <div className="container-lg">
+    <motion.div className="container-lg"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{ duration: 0.25 }}>
       <div className="d-flex align-items-center justify-content-between mt-3 mb-2">
         <h3 className="mb-0">Tasks</h3>
         <div className="d-flex align-items-center">
@@ -127,6 +132,6 @@ export default function TasksPage({ user }) {
       {success && <div className="alert alert-success mt-3">{success}</div>}
 
       <TaskModal show={showModal} onClose={() => setShowModal(false)} onCreate={handleCreate} user={user} />
-    </div>
+    </motion.div>
   );
 }

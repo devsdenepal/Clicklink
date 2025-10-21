@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { useParams, useLocation } from 'react-router-dom';
 import { api } from '../utils/auth';
 
@@ -147,7 +148,11 @@ export default function TaskDetail({ user, checkAuthStatus }) {
   );
 
   return (
-    <div className="container mt-3">
+    <motion.div className="container mt-3"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{ duration: 0.25 }}>
       {success && (
         <div className="alert alert-success">{success}</div>
       )}
@@ -213,6 +218,6 @@ export default function TaskDetail({ user, checkAuthStatus }) {
           })}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

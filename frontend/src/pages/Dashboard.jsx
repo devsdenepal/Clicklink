@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/auth';
 
@@ -62,7 +63,11 @@ export default function Dashboard() {
   }, [tasks]);
 
   return (
-    <div className="container-lg py-3">
+    <motion.div className="container-lg py-3"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{ duration: 0.25 }}>
       <div className="d-flex align-items-center justify-content-between mb-3">
         <h3 className="mb-0">Dashboard</h3>
         <button className="btn btn-outline-secondary btn-sm" onClick={load} disabled={loading}>
@@ -79,9 +84,13 @@ export default function Dashboard() {
         <>
           {/* Status summary cards */}
           <div className="row g-3 mb-3">
-            {['Open', 'In Progress', 'Review', 'Done'].map(key => (
+            {['Open', 'In Progress', 'Review', 'Done'].map((key, idx) => (
               <div key={key} className="col-6 col-md-3">
-                <div className="card h-100">
+                <motion.div className="card h-100"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, delay: idx * 0.05 }}
+                  whileHover={{ y: -2 }}>
                   <div className="card-body">
                     <div className="text-muted small">{key}</div>
                     <div className="h4 mb-2">{counts[key] || 0}</div>
@@ -89,7 +98,7 @@ export default function Dashboard() {
                       <div className="progress-bar" style={{ width: `${pct(counts[key] || 0)}%` }} />
                     </div>
                   </div>
-                </div>
+                </motion.div>
               </div>
             ))}
           </div>
@@ -143,6 +152,6 @@ export default function Dashboard() {
           </div>
         </>
       )}
-    </div>
+    </motion.div>
   );
 }

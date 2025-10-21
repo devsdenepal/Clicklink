@@ -16,7 +16,11 @@ export default function MainLayout({ user, onLogout }) {
       <div className="row flex-nowrap min-vh-100">
         {/* Sidebar */}
         <div className="col-auto col-md-3 col-lg-2 px-0 bg-dark border-end border-secondary">
-          <div className="px-3 py-3 border-bottom border-secondary fw-bold text-light">Clicklink</div>
+          <div className="px-3 py-3 border-bottom border-secondary d-flex align-items-center">
+            <img src="/assets/single-logo-black-bg-white-logo.png" alt="Clicklink" style={{ height: 28, width: 'auto', borderRadius: 4 }} />
+            {/* something greeting like howdy but not use word howdy */}
+            <span className="ms-2 fw-semibold text-light">Welcome back!</span>
+          </div>
           <nav className="nav nav-pills flex-column px-2 py-2">
             <LinkItem to="/dashboard">Dashboard</LinkItem>
             <LinkItem to="/tasks">Tasks</LinkItem>

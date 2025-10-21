@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { getToken, isTokenExpired, removeToken } from '../utils/auth';
 
@@ -26,10 +27,14 @@ export default function Login() {
   <div className="min-vh-100 w-100 d-flex align-items-center bg-dark">
       <div className="container">
         <div className="row justify-content-center">
-          <div className="col-11 col-sm-9 col-md-6 col-lg-5 col-xl-4">
-            <div className="card shadow-sm">
-              <div className="card-body p-4 text-center">
-                <h1 className="h3 mb-2">Clicklink</h1>
+                  <div className="col-11 col-sm-9 col-md-6 col-lg-5 col-xl-4">
+                    <motion.div className="card shadow-sm"
+                      initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                      transition={{ duration: 0.35, ease: 'easeOut' }}>
+          <div className="card-body p-4 text-center">
+        <img src="/assets/black-bg-white-with-text.png" alt="Clicklink" className="img-fluid mb-3" style={{ maxWidth: 200, height: 'auto' }} />
                 <p className="text-muted mb-4">Manage Design, Dev, and GitHub tasks in one place.</p>
                 <button className="btn btn-primary btn-lg w-100" onClick={handleLogin}>
                   Login with ClickUp
@@ -38,7 +43,7 @@ export default function Login() {
                   You will be redirected to ClickUp to authorize access.
                 </div>
               </div>
-            </div>
+                    </motion.div>
           </div>
         </div>
       </div>

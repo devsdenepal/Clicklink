@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import TaskDetail from './pages/TaskDetail';
@@ -94,7 +95,8 @@ function App() {
   return (
     <div>
       <main>
-        <Routes>
+        <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Login />} />
           <Route element={user ? <MainLayout user={user} onLogout={handleLogout} /> : <Login />}>
             <Route path="/dashboard" element={<Dashboard user={user} onLogout={handleLogout} />} />
@@ -106,6 +108,7 @@ function App() {
             <Route path="/members" element={<Profile user={user} />} />
           </Route>
         </Routes>
+        </AnimatePresence>
       </main>
     </div>
   );
