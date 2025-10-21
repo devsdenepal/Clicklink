@@ -34,7 +34,7 @@ export default function Login() {
                       exit={{ opacity: 0, y: -8, scale: 0.98 }}
                       transition={{ duration: 0.35, ease: 'easeOut' }}>
           <div className="card-body p-4 text-center">
-        <img src="/assets/black-bg-white-with-text.png" alt="Clicklink" className="img-fluid mb-3" style={{ maxWidth: 200, height: 'auto' }} />
+        <img src="/assets/clicklink.png" alt="Clicklink" className="img-fluid mb-3" style={{ maxWidth: 200, height: 'auto' }} />
                 <p className="text-muted mb-4">Manage Design, Dev, and GitHub tasks in one place.</p>
                 <button className="btn btn-primary btn-lg w-100" onClick={handleLogin}>
                   Login with ClickUp

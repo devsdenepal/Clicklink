@@ -1,7 +1,8 @@
 import React from 'react';
 
 function TaskRow({ task, onStatusChange, statuses = [], updatingTaskId }) {
-  const assignee = (task.assignees && task.assignees[0]) || {};
+  const rawAssignee = (Array.isArray(task.assignees) && task.assignees.length ? (task.assignees[0].user || task.assignees[0]) : null);
+  const assigneeLabel = rawAssignee ? (rawAssignee.username || rawAssignee.email || rawAssignee.name || rawAssignee.display_name || rawAssignee.full_name || rawAssignee.id) : '—';
   const due = task.due_date ? new Date(Number(task.due_date)).toLocaleString() : '—';
   const current = task.status ? (task.status.status || task.status) : '';
   const isUpdating = updatingTaskId === task.id;
@@ -10,7 +11,7 @@ function TaskRow({ task, onStatusChange, statuses = [], updatingTaskId }) {
     <tr>
       <td>{task.name}</td>
       <td>{current || '—'}</td>
-      <td>{assignee.username || '—'}</td>
+  <td>{assigneeLabel}</td>
       <td>{due}</td>
       <td>
         <div className="d-flex align-items-center">

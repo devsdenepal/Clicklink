@@ -10,7 +10,10 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
 export default function TaskCard({ task, repo }) {
-  const assignee = (task.assignees && task.assignees[0]) || {};
+  const rawAssignee = (Array.isArray(task.assignees) && task.assignees.length ? (task.assignees[0].user || task.assignees[0]) : null);
+  const displayAssignee = rawAssignee ? (
+    rawAssignee.username || rawAssignee.email || rawAssignee.name || rawAssignee.display_name || rawAssignee.full_name || rawAssignee.id
+  ) : '—';
   const status = task.status?.status || task.status || '';
 
   return (
@@ -24,7 +27,7 @@ export default function TaskCard({ task, repo }) {
       <div className="card-body d-flex justify-content-between align-items-start">
         <div>
           <h6 className="card-title mb-1"><Link to={`/task/${task.id}`} state={{ task }}>{task.name}</Link></h6>
-          <div className="small text-muted">{assignee.username || '—'} · {status || 'No status'}</div>
+          <div className="small text-muted">{displayAssignee || '—'} · {status || 'No status'}</div>
         </div>
         <div className="text-end">
           {repo && (
