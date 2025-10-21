@@ -27,6 +27,15 @@ export default function TaskDetail({ user, checkAuthStatus }) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [subtasksIndex, setSubtasksIndex] = useState(new Set());
+  // Edit controls
+  const [members, setMembers] = useState([]);
+  const [statuses, setStatuses] = useState([]);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editStatus, setEditStatus] = useState('');
+  const [editAssignees, setEditAssignees] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [metaLoading, setMetaLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -37,6 +46,13 @@ export default function TaskDetail({ user, checkAuthStatus }) {
         let reposList = [];
         if (stateTask) {
           setTask(stateTask);
+          // Initialize edit fields from stateTask as well
+          setEditName(stateTask.name || '');
+          setEditDescription(stateTask.description || '');
+          const statusLabelS = typeof stateTask.status === 'string' ? stateTask.status : (stateTask.status?.status || stateTask.status?.name || '');
+          setEditStatus(statusLabelS);
+          const assigneeIdsS = Array.isArray(stateTask.assignees) ? stateTask.assignees.map(a => a.id).filter(Boolean) : [];
+          setEditAssignees(assigneeIdsS);
           reposList = extractReposFromText(stateTask.description || '');
           setRepos(reposList);
         } else if (user) {
@@ -47,6 +63,13 @@ export default function TaskDetail({ user, checkAuthStatus }) {
           setTask(t);
           reposList = extractReposFromText(t.description || '');
           setRepos(reposList);
+          // Initialize edit fields
+          setEditName(t.name || '');
+          setEditDescription(t.description || '');
+          const statusLabel = typeof t.status === 'string' ? t.status : (t.status?.status || t.status?.name || '');
+          setEditStatus(statusLabel);
+          const assigneeIds = Array.isArray(t.assignees) ? t.assignees.map(a => a.id).filter(Boolean) : [];
+          setEditAssignees(assigneeIds);
         } else {
           // Not logged in: we can still render GitHub data if the Link passed task state
           // Otherwise, skip fetching ClickUp task to avoid 401 noise
@@ -116,6 +139,38 @@ export default function TaskDetail({ user, checkAuthStatus }) {
     return () => { mounted = false; };
   }, [id]);
 
+  // Fetch members and statuses for editing once we have task info
+  useEffect(() => {
+    let cancelled = false;
+    const loadMeta = async () => {
+      if (!user || !task) return;
+      setMetaLoading(true);
+      try {
+        // Members
+        const mRes = await api.get('/api/members');
+        const mJson = await mRes.json();
+        const normalizedMembers = Array.isArray(mJson?.members) ? mJson.members : (Array.isArray(mJson) ? mJson : []);
+        // ensure shape { id, username/email }
+        const mm = normalizedMembers.map(m => m.user || m).filter(Boolean);
+        if (!cancelled) setMembers(mm);
+        // Statuses for this task's list
+        const listId = task?.list?.id || task?.list_id || task?.listId;
+        if (listId) {
+          const sRes = await api.get(`/api/tasks/statuses?list_id=${encodeURIComponent(listId)}`);
+          const sJson = await sRes.json();
+          const st = Array.isArray(sJson.statuses) ? sJson.statuses : [];
+          if (!cancelled) setStatuses(st);
+        }
+      } catch (e) {
+        if (!cancelled) console.warn('Failed to load members/statuses', e);
+      } finally {
+        if (!cancelled) setMetaLoading(false);
+      }
+    };
+    loadMeta();
+    return () => { cancelled = true; };
+  }, [user, task]);
+
   const createSubtaskFromIssue = async (repo, issueNumber) => {
     try {
       if (!user) return setError('Not logged in to ClickUp. Please connect your account.');
@@ -135,6 +190,53 @@ export default function TaskDetail({ user, checkAuthStatus }) {
     } catch (e) {
       setError(String(e));
       return null;
+    }
+  };
+
+  const nothingChanged = () => {
+    if (!task) return true;
+    const curName = task.name || '';
+    const curDesc = task.description || '';
+    const curStatus = typeof task.status === 'string' ? task.status : (task.status?.status || task.status?.name || '');
+    const curAssignees = Array.isArray(task.assignees) ? task.assignees.map(a => a.id).filter(Boolean).sort() : [];
+    const newAssignees = [...editAssignees].sort();
+    return (
+      curName === editName &&
+      curDesc === editDescription &&
+      (curStatus || '') === (editStatus || '') &&
+      JSON.stringify(curAssignees) === JSON.stringify(newAssignees)
+    );
+  };
+
+  const handleSave = async () => {
+    if (!user || !task || saving || nothingChanged()) return;
+    setSaving(true); setError(null); setSuccess(null);
+    try {
+      const body = {};
+      if ((task.name || '') !== editName) body.name = editName;
+      if ((task.description || '') !== editDescription) body.description = editDescription;
+      const curStatus = typeof task.status === 'string' ? task.status : (task.status?.status || task.status?.name || '');
+      if ((curStatus || '') !== (editStatus || '')) body.status = editStatus;
+      const curAssignees = Array.isArray(task.assignees) ? task.assignees.map(a => a.id).filter(Boolean).sort() : [];
+      const newAssignees = [...editAssignees].sort();
+      if (JSON.stringify(curAssignees) !== JSON.stringify(newAssignees)) body.assignees = newAssignees.map(Number);
+
+      if (Object.keys(body).length === 0) { setSaving(false); return; }
+      const res = await api.put(`/api/tasks/${task.id}`, body);
+      const updated = await res.json();
+      // Merge into current task
+      const newTask = { ...task };
+      if (body.name) newTask.name = body.name;
+      if (body.description) newTask.description = body.description;
+      if (body.status) newTask.status = body.status;
+      if (body.assignees) newTask.assignees = body.assignees.map(id => ({ id, username: (members.find(m => m.id === id)?.username) || (members.find(m => m.id === id)?.email) || id }));
+      setTask(newTask);
+      setSuccess('Task updated');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (e) {
+      setError(e?.message || 'Failed to update task');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -173,6 +275,61 @@ export default function TaskDetail({ user, checkAuthStatus }) {
           </div>
         </div>
         <div className="col-md-5">
+          {/* Edit controls */}
+          <div className="card mb-3">
+            <div className="card-body">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h5 className="mb-0">Edit Task</h5>
+                <div>
+                  <button className="btn btn-sm btn-success me-2" onClick={handleSave} disabled={!user || saving || nothingChanged()}>
+                    {saving ? <><span className="spinner-border spinner-border-sm me-2" />Saving…</> : 'Save Changes'}
+                  </button>
+                </div>
+              </div>
+              {!user && (
+                <div className="alert alert-warning mb-2">Connect your ClickUp account to edit this task.</div>
+              )}
+              {metaLoading ? (
+                <div className="d-flex justify-content-center py-3">
+                  <div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading…</span></div>
+                </div>
+              ) : (
+                <form onSubmit={e => { e.preventDefault(); handleSave(); }}>
+                  <div className="mb-3">
+                    <label className="form-label">Title</label>
+                    <input type="text" className="form-control" value={editName} onChange={e => setEditName(e.target.value)} disabled={!user} />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Description</label>
+                    <textarea className="form-control" rows="5" value={editDescription} onChange={e => setEditDescription(e.target.value)} disabled={!user} />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Status</label>
+                    <select className="form-select" value={editStatus || ''} onChange={e => setEditStatus(e.target.value)} disabled={!user}>
+                      <option value="">(no change)</option>
+                      {statuses.map(s => {
+                        const label = (s.status || s.name || '').toString();
+                        return <option key={label} value={label}>{label}</option>;
+                      })}
+                    </select>
+                  </div>
+                  <div className="mb-2">
+                    <label className="form-label">Assignees</label>
+                    <select multiple className="form-select" value={editAssignees.map(String)} onChange={e => {
+                      const opts = Array.from(e.target.selectedOptions).map(o => Number(o.value));
+                      setEditAssignees(opts);
+                    }} disabled={!user}>
+                      {members.map(m => (
+                        <option key={m.id} value={m.id}>{m.username || m.email || m.id}</option>
+                      ))}
+                    </select>
+                    <div className="form-text">Hold Ctrl/Cmd to select multiple assignees.</div>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+
           <h5>GitHub</h5>
           {repos.length === 0 && <div className="text-muted">No GitHub repo links found in description.</div>}
           {repos.map(r => {
