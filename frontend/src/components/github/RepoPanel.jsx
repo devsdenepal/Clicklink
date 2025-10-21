@@ -16,6 +16,8 @@ export default function RepoPanel({ repo, parentTaskId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [syncing, setSyncing] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [msg, setMsg] = useState(null);
 
   const fetchUpdates = async () => {
     setLoading(true); setError(null);
@@ -46,6 +48,8 @@ export default function RepoPanel({ repo, parentTaskId }) {
 
   const createSubtask = async (issueNumber) => {
     try {
+      if (creating) return;
+      setCreating(true);
       const body = {
         parent_task_id: parentTaskId,
         name: `[GitHub Issue #${issueNumber}] ${repo}`,
@@ -53,10 +57,13 @@ export default function RepoPanel({ repo, parentTaskId }) {
       };
   const res = await api.post('/api/tasks/subtasks', body);
       if (!res.ok) throw new Error(await res.text());
-      return await res.json();
+      const j = await res.json();
+      setMsg(`Created subtask ${j.task_id || j.id || ''}`);
+      setTimeout(() => setMsg(null), 4000);
+      return j;
     } catch (e) {
       setError(String(e));
-    }
+    } finally { setCreating(false); }
   };
 
   return (
@@ -70,6 +77,7 @@ export default function RepoPanel({ repo, parentTaskId }) {
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
+      {msg && <div className="alert alert-success">{msg}</div>}
       <RepoTabs updates={updates} onCreateSubtask={createSubtask} />
     </div>
   );

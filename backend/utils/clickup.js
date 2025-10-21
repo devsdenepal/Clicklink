@@ -126,8 +126,9 @@ const createClickUpSubtask = async (clickupToken, parentTaskId, subtask) => {
           validateStatus: () => true
         });
 
-        if (resp.status === 201) {
+        if (resp.status === 201 || resp.status === 200) {
           const data = resp.data || {};
+          try { console.info('ClickUp subtask created', { id: data.id, parent: body.parent, list: parentListId }); } catch {}
           return {
             status_code: resp.status,
             task_id: data.id,
@@ -144,7 +145,7 @@ const createClickUpSubtask = async (clickupToken, parentTaskId, subtask) => {
           err.response = resp;
           throw err;
         }
-        if (resp.status === 429 || (resp.status >= 500 && resp.status < 600)) {
+        if (resp.status === 429) {
           const backoff = 500 * Math.pow(2, attempt - 1);
           await sleep(backoff);
           continue; // retry

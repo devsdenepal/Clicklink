@@ -5,6 +5,7 @@ export default function GitHubPanel({ owner, repo, since }) {
   const [data, setData] = useState({ issues: [], prs: [], commits: [] });
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState(null);
+  const [creating, setCreating] = useState(false);
 
   const fetchUpdates = async () => {
     setLoading(true);
@@ -32,6 +33,8 @@ export default function GitHubPanel({ owner, repo, since }) {
 
   const handleCreateSubtask = async (issueNumber) => {
     try {
+      if (creating) return;
+      setCreating(true);
       // Use ClickUp subtask endpoint directly; requires a valid parent task id
       const parent_task_id = window.__CURRENT_TASK_ID__;
       const payload = {
@@ -42,9 +45,10 @@ export default function GitHubPanel({ owner, repo, since }) {
       const res = await api.post('/api/tasks/subtasks', payload);
       if (!res.ok) throw new Error(await res.text());
       const j = await res.json();
-      setMsg({ type: 'success', text: `Created subtask: ${JSON.stringify(j)}` });
+      setMsg({ type: 'success', text: `Created subtask ${j.task_id || j.id || ''}` });
       fetchUpdates();
     } catch (e) { setMsg({ type: 'error', text: String(e) }); }
+    finally { setCreating(false); }
   };
 
   return (
@@ -67,7 +71,7 @@ export default function GitHubPanel({ owner, repo, since }) {
                 <li key={i.id} className="mb-2">
                   <div><strong>#{i.number}</strong> {i.title}</div>
                   <div className="mt-1">
-                    <button className="btn btn-sm btn-primary me-2" onClick={() => handleCreateSubtask(i.number)}>Create Subtask</button>
+                    <button className="btn btn-sm btn-primary me-2" onClick={() => handleCreateSubtask(i.number)} disabled={creating}>Create Subtask</button>
                     <a className="btn btn-sm btn-outline-secondary" href={i.html_url} target="_blank" rel="noreferrer">Open</a>
                   </div>
                 </li>

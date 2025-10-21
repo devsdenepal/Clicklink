@@ -24,6 +24,7 @@ export default function TaskDetail({ user, checkAuthStatus }) {
   const [githubData, setGithubData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -83,6 +84,11 @@ export default function TaskDetail({ user, checkAuthStatus }) {
       };
       const res = await api.post(`/api/tasks/${task.id}/subtasks`, payload);
       const data = await res.json();
+      setSuccess(`Subtask created (id: ${data.task_id || data.id || 'unknown'})`);
+      setTimeout(() => setSuccess(null), 4000);
+      // Optional: refresh details if you want to show live updates
+      // const refreshed = await api.get(`/api/tasks/${id}`);
+      // setTask(await refreshed.json());
       return data;
     } catch (e) {
       setError(String(e));
@@ -101,6 +107,9 @@ export default function TaskDetail({ user, checkAuthStatus }) {
 
   return (
     <div className="container mt-3">
+      {success && (
+        <div className="alert alert-success">{success}</div>
+      )}
       <div className="row">
         <div className="col-md-7">
           <div className="card p-3 mb-3">
