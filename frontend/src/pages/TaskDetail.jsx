@@ -138,7 +138,15 @@ export default function TaskDetail({ user, checkAuthStatus }) {
     }
   };
 
-  if (loading) return <div className="container mt-3">Loading…</div>;
+  if (loading) return (
+    <div className="container mt-3">
+      <div className="d-flex justify-content-center py-5">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading…</span>
+        </div>
+      </div>
+    </div>
+  );
   if (error) return (
     <div className="container mt-3">
       <div className="alert alert-warning">{error}</div>

@@ -124,7 +124,15 @@ export default function TasksPage({ user }) {
 
       <div className="row">
         <div className="col-12">
-          {loading ? <div>Loading tasks…</div> : <TaskList tasks={filtered} onStatusChange={handleStatusChange} statuses={statuses} updatingTaskId={updatingTaskId} />}
+          {loading ? (
+            <div className="d-flex justify-content-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading…</span>
+              </div>
+            </div>
+          ) : (
+            <TaskList tasks={filtered} onStatusChange={handleStatusChange} statuses={statuses} updatingTaskId={updatingTaskId} />
+          )}
         </div>
       </div>
 
