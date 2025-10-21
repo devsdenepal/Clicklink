@@ -11,9 +11,12 @@ function generateToken(user) {
     email: user.email,
     username: user.username,
     clickupToken: user.clickupToken // Include ClickUp token in JWT
-  }, JWT_SECRET, { 
-    expiresIn: '7d' 
-  });
+  }, JWT_SECRET, { expiresIn: '7d' });
+}
+
+// Generic signer to support adding githubToken or merging payloads
+function signJwt(payload, opts = {}) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: opts.expiresIn || '7d' });
 }
 
 function requireAuth(req, res, next) {
@@ -32,8 +35,8 @@ function requireAuth(req, res, next) {
     // Verify token
     const decoded = jwt.verify(token, JWT_SECRET);
     
-    // Check if token has required fields
-    if (!decoded.clickupToken) {
+    // Check if token has at least one provider token
+    if (!decoded.clickupToken && !decoded.githubToken) {
       return res.status(401).json({ error: 'Invalid token format', code: 'TOKEN_INVALID_FORMAT' });
     }
 
@@ -59,6 +62,7 @@ function requireAuth(req, res, next) {
 
 module.exports = {
   generateToken,
+  signJwt,
   requireAuth,
   JWT_SECRET
 };

@@ -97,8 +97,9 @@ const logout = (req, res) => {
 // 3. Get authenticated ClickUp user info
 const getUser = async (req, res) => {
   try {
+    // If the JWT is GitHub-only (no ClickUp token), report a valid session without ClickUp user
     if (!req.user.clickupToken) {
-      return res.status(401).json({ error: 'Unauthorized', details: 'No ClickUp token found' });
+      return res.json({ user: null, providers: { clickup: false, github: !!req.user.githubToken } });
     }
 
     const userRes = await axios.get('https://api.clickup.com/api/v2/user', {

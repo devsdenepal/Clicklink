@@ -27,6 +27,8 @@ export default function MainLayout({ user, onLogout }) {
             <LinkItem to="/members">Members</LinkItem>
             <LinkItem to="/settings">Settings</LinkItem>
             <LinkItem to="/me">Profile</LinkItem>
+            <hr className="border-secondary" />
+            <LinkItem to="/github-stats">GitHub Stats</LinkItem>
           </nav>
         </div>
 

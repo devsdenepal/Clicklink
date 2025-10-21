@@ -7,6 +7,8 @@ const authRoutes = require('./routes/auth');
 const taskRoutes = require('./routes/tasks');
 const memberRoutes = require('./routes/members');
 const githubRoutes = require('./routes/github');
+const githubAuthRoutes = require('./routes/githubAuth');
+const githubStatsRoutes = require('./routes/githubStats');
 const { errorHandler } = require('./middleware/error');
 
 const app = express();
@@ -21,9 +23,11 @@ app.use(cookieParser());
 
 // Routes
 app.use('/auth', authRoutes);
+app.use('/auth', githubAuthRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/github', githubRoutes);
+app.use('/api/github', githubStatsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

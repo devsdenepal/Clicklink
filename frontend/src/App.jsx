@@ -7,6 +7,7 @@ import TaskDetail from './pages/TaskDetail';
 import Profile from './pages/Profile';
 import Tasks from './pages/Tasks';
 import Settings from './pages/Settings';
+import GitHubStats from './pages/GitHubStats';
 import { api, getToken, setToken, removeToken } from './utils/auth';
 import MainLayout from './layouts/MainLayout';
 
@@ -65,8 +66,13 @@ function App() {
       }
       return false;
     } catch (err) {
-      console.warn('Auth check failed:', err.message);
-      removeToken(); // Remove potentially invalid token
+      console.warn('Auth check failed:', err.message, err.code);
+      // If token is GitHub-only, /auth/user will be TOKEN_INVALID_FORMAT; keep token for GitHub pages
+      if (err && (err.code === 'TOKEN_INVALID_FORMAT')) {
+        setUser(null);
+        return false;
+      }
+      removeToken();
       setUser(null);
       return false;
     }
@@ -104,6 +110,8 @@ function App() {
         <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Login />} />
+          {/* Allow GitHub Stats directly when not logged-in (GitHub-only token). */}
+          {!user && (<Route path="/github-stats" element={<GitHubStats />} />)}
           <Route element={user ? <MainLayout user={user} onLogout={handleLogout} /> : <Login />}>
             <Route path="/dashboard" element={<Dashboard user={user} onLogout={handleLogout} />} />
             <Route path="/task/:id" element={<TaskDetail user={user} checkAuthStatus={checkAuthStatus} />} />
@@ -112,6 +120,8 @@ function App() {
             {/* Tasks list page (original detailed view) */}
             <Route path="/tasks" element={<Tasks user={user} />} />
             <Route path="/members" element={<Profile user={user} />} />
+            {/* When logged-in, render GitHub Stats inside the layout (with sidebar) */}
+            <Route path="/github-stats" element={<GitHubStats />} />
           </Route>
         </Routes>
         </AnimatePresence>
