@@ -112,7 +112,7 @@ export default function DashboardPage({ user }) {
   const filtered = tasks.filter(t => !query || (t.name && t.name.toLowerCase().includes(query.toLowerCase())));
 
   return (
-    <div className="container" style={{ maxWidth: 1100 }}>
+    <div className="container-lg">
       <div className="d-flex align-items-center justify-content-between mt-3 mb-2">
         <h3 className="mb-0">Tasks</h3>
         <div className="d-flex align-items-center">

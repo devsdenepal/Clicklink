@@ -11,7 +11,7 @@ function Field({ label, value }) {
 
 export default function Dashboard({ user, onLogout }) {
   return (
-    <div className="container" style={{ maxWidth: 1024 }}>
+    <div className="container-lg">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="h3 mb-0">Welcome, {user.display_name || user.username || 'User'} 👋</h1>
         <div>

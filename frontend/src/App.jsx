@@ -3,10 +3,10 @@ import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import TaskDetail from './pages/TaskDetail';
-import Navbar from './components/Navbar';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import { api, getToken, setToken, removeToken } from './utils/auth';
+import MainLayout from './layouts/MainLayout';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -85,26 +85,18 @@ function App() {
 
   return (
     <div>
-      {location.pathname !== '/' && <Navbar user={user} onLogout={handleLogout} />}
-
-      <main style={{width: '100vw'}}>
-        {location.pathname !== '/' && (
-          <div className="container">
-            {error && (
-              <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                {error}
-                <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" />
-              </div>
-            )}
-          </div>
-        )}
-
+      <main>
         <Routes>
           <Route path="/" element={<Login />} />
-          <Route path="/dashboard" element={user ? <Dashboard user={user} onLogout={handleLogout} /> : <Login />} />
-          <Route path="/task/:id" element={<TaskDetail user={user} checkAuthStatus={checkAuthStatus} />} />
-          <Route path="/profile" element={<Profile user={user} />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route element={user ? <MainLayout user={user} onLogout={handleLogout} /> : <Login />}>
+            <Route path="/dashboard" element={<Dashboard user={user} onLogout={handleLogout} />} />
+            <Route path="/task/:id" element={<TaskDetail user={user} checkAuthStatus={checkAuthStatus} />} />
+            <Route path="/me" element={<Profile user={user} />} />
+            <Route path="/settings" element={<Settings />} />
+            {/* Placeholder routes to match sidebar */}
+            <Route path="/tasks" element={<Dashboard user={user} onLogout={handleLogout} />} />
+            <Route path="/members" element={<Profile user={user} />} />
+          </Route>
         </Routes>
       </main>
     </div>
