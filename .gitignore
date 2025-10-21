@@ -1,0 +1,12 @@
+*/temp/*
+*.log
+.DS_Store
+node_modules/
+dist/
+.env
+.idea/
+.vscode/
+*.bak
+*.swp
+coverage/
+*.tmp
