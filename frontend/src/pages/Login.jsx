@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { getToken, isTokenExpired, removeToken } from '../utils/auth';
+import { SiClickup } from 'react-icons/si';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -36,8 +37,9 @@ export default function Login() {
           <div className="card-body p-4 text-center">
         <img src="/assets/clicklink.png" alt="Clicklink" className="img-fluid mb-3" style={{ maxWidth: 200, height: 'auto' }} />
                 <p className="text-muted mb-4">Manage Design, Dev, and GitHub tasks in one place.</p>
-                <button className="btn btn-primary btn-lg w-100" onClick={handleLogin}>
-                  Login with ClickUp
+                <button className="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center gap-2" onClick={handleLogin}>
+                  <SiClickup size={22} />
+                  <span>Login with ClickUp</span>
                 </button>
                 <div className="mt-3 small text-muted">
                   You will be redirected to ClickUp to authorize access.
