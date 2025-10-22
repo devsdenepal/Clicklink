@@ -24,6 +24,7 @@ export default function MainLayout({ user, onLogout }) {
           <nav className="nav nav-pills flex-column px-2 py-2">
             <LinkItem to="/dashboard">Dashboard</LinkItem>
             <LinkItem to="/tasks">Tasks</LinkItem>
+            <LinkItem to="/activity">Activity</LinkItem>
             <LinkItem to="/members">Members</LinkItem>
             <LinkItem to="/settings">Settings</LinkItem>
             <LinkItem to="/me">Profile</LinkItem>

@@ -7,6 +7,7 @@ import TaskDetail from './pages/TaskDetail';
 import Profile from './pages/Profile';
 import Tasks from './pages/Tasks';
 import Settings from './pages/Settings';
+import Activity from './pages/Activity';
 import GitHubStats from './pages/GitHubStats';
 import { api, getToken, setToken, removeToken } from './utils/auth';
 import MainLayout from './layouts/MainLayout';
@@ -115,6 +116,7 @@ function App() {
           <Route element={user ? <MainLayout user={user} onLogout={handleLogout} /> : <Login />}>
             <Route path="/dashboard" element={<Dashboard user={user} onLogout={handleLogout} />} />
             <Route path="/task/:id" element={<TaskDetail user={user} checkAuthStatus={checkAuthStatus} />} />
+            <Route path="/activity" element={<Activity />} />
             <Route path="/me" element={<Profile user={user} />} />
             <Route path="/settings" element={<Settings />} />
             {/* Tasks list page (original detailed view) */}

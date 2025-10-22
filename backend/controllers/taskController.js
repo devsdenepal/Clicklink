@@ -1,4 +1,5 @@
 const { getClickUpTasksByList, getClickUpTask, getListStatuses, createTaskInList, updateTask, createClickUpSubtask, getClickUpSubtasks } = require('../utils/clickup');
+const logActivity = require('../utils/logActivity');
 
 // Simple in-memory lock map to avoid duplicate rapid subtask creations
 const inFlightSubtask = new Map();
@@ -73,6 +74,8 @@ const createTask = async (req, res) => {
       payload.assignees = payload.assignees.map(a => Number(a)).filter(Boolean);
     }
     const created = await createTaskInList(req.user.clickupToken, listId, payload);
+    // Log activity
+    await logActivity({ user: req.user, action: 'created task', task: created });
     res.status(201).json(created);
   } catch (err) {
     console.error('Failed to create task:', err.response?.data || err.message);
@@ -83,6 +86,10 @@ const createTask = async (req, res) => {
 const updateTaskHandler = async (req, res) => {
   try {
     const updated = await updateTask(req.user.clickupToken, req.params.id, req.body);
+    // Determine action detail (e.g., status change)
+    let action = 'updated task';
+    if (req.body && typeof req.body.status !== 'undefined') action = 'updated task status';
+    await logActivity({ user: req.user, action, task: { id: req.params.id, name: req.body?.name } });
     res.json(updated);
   } catch (err) {
     console.error('Failed to update task:', err.response?.data || err.message);
@@ -113,8 +120,9 @@ const createSubtaskByParam = async (req, res) => {
     inFlightSubtask.set(lockKey, Date.now());
     let timer = setTimeout(() => inFlightSubtask.delete(lockKey), 15000);
     try {
-      const created = await createClickUpSubtask(req.user.clickupToken, parentId, payload);
-      return res.status(created.status_code || 201).json(created);
+  const created = await createClickUpSubtask(req.user.clickupToken, parentId, payload);
+  await logActivity({ user: req.user, action: 'created subtask', task: created });
+  return res.status(created.status_code || 201).json(created);
     } finally {
       clearTimeout(timer);
       inFlightSubtask.delete(lockKey);
@@ -149,8 +157,9 @@ const createSubtask = async (req, res) => {
     inFlightSubtask.set(lockKey, Date.now());
     let timer = setTimeout(() => inFlightSubtask.delete(lockKey), 15000);
     try {
-      const created = await createClickUpSubtask(req.user.clickupToken, parentId, payload);
-      return res.status(created.status_code || 201).json(created);
+  const created = await createClickUpSubtask(req.user.clickupToken, parentId, payload);
+  await logActivity({ user: req.user, action: 'created subtask', task: created });
+  return res.status(created.status_code || 201).json(created);
     } finally {
       clearTimeout(timer);
       inFlightSubtask.delete(lockKey);
