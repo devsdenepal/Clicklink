@@ -22,7 +22,7 @@ function TaskRow({ task, onStatusChange, statuses = [], updatingTaskId }) {
               return <option key={label} value={label}>{label}</option>;
             })}
           </select>
-          {isUpdating && <div className="spinner-border spinner-border-sm text-primary" role="status"><span className="visually-hidden">Updating...</span></div>}
+          {isUpdating && <img src="/assets/loading.gif" alt="Updating…" style={{ height: 48 }} />}
         </div>
       </td>
     </tr>

@@ -11,6 +11,7 @@ import Activity from './pages/Activity';
 import GitHubStats from './pages/GitHubStats';
 import { api, getToken, setToken, removeToken } from './utils/auth';
 import MainLayout from './layouts/MainLayout';
+import Loading from './components/Loading';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -99,9 +100,7 @@ function App() {
 
   if (loading) return (
     <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
-      <div className="spinner-border text-primary" role="status">
-        <span className="visually-hidden">Loading…</span>
-      </div>
+      <Loading size="lg" />
     </div>
   );
 

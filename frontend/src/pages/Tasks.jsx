@@ -111,7 +111,7 @@ export default function TasksPage({ user }) {
           </div>
           <button className="btn btn-outline-secondary me-2" onClick={() => setShowModal(true)}>New Task</button>
           <button className="btn btn-primary" onClick={handleSyncAll} disabled={syncing}>
-            {syncing ? <><span className="spinner-border spinner-border-sm me-2"></span>Syncing…</> : 'Sync All'}
+            {syncing ? <><img src="/assets/loading.gif" alt="Loading…" style={{ height: 64 }} className="me-2" />Syncing…</> : 'Sync All'}
           </button>
         </div>
       </div>
@@ -126,9 +126,7 @@ export default function TasksPage({ user }) {
         <div className="col-12">
           {loading ? (
             <div className="d-flex justify-content-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading…</span>
-              </div>
+              <img src="/assets/loading.gif" alt="Loading…" style={{ height: 192 }} />
             </div>
           ) : (
             <TaskList tasks={filtered} onStatusChange={handleStatusChange} statuses={statuses} updatingTaskId={updatingTaskId} />

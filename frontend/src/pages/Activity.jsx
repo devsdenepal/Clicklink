@@ -58,7 +58,7 @@ export default function Activity() {
             {[20, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
           </select>
           <button className="btn btn-outline-secondary btn-sm" onClick={load} disabled={loading}>
-            {loading ? (<><span className="spinner-border spinner-border-sm me-2" />Loading…</>) : 'Refresh'}
+            {loading ? (<><img src="/assets/loading.gif" alt="Loading…" style={{ height: 64 }} className="me-2" />Loading…</>) : 'Refresh'}
           </button>
         </div>
       </div>
@@ -67,7 +67,7 @@ export default function Activity() {
 
       {loading && !rows.length ? (
         <div className="d-flex justify-content-center py-5">
-          <div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading…</span></div>
+          <img src="/assets/loading.gif" alt="Loading…" style={{ height: 192 }} />
         </div>
       ) : (
         <div className="card">

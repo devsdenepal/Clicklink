@@ -67,7 +67,7 @@ export default function GitHubStats() {
 
       {loading ? (
         <div className="d-flex justify-content-center py-5">
-          <div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading…</span></div>
+          <img src="/assets/loading.gif" alt="Loading…" style={{ height: 192 }} />
         </div>
       ) : (
         <>
@@ -77,7 +77,7 @@ export default function GitHubStats() {
             <div className="text-muted mt-3">Select a repository to see stats.</div>
           ) : loadingStats ? (
             <div className="d-flex justify-content-center py-5">
-              <div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading…</span></div>
+              <img src="/assets/loading.gif" alt="Loading…" style={{ height: 192 }} />
             </div>
           ) : stats ? (
             <>

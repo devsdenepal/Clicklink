@@ -311,9 +311,7 @@ export default function TaskDetail({ user, checkAuthStatus }) {
   if (loading) return (
     <div className="container mt-3">
       <div className="d-flex justify-content-center py-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading…</span>
-        </div>
+  <img src="/assets/loading.gif" alt="Loading…" style={{ height: 192 }} />
       </div>
     </div>
   );
@@ -372,7 +370,7 @@ export default function TaskDetail({ user, checkAuthStatus }) {
                             <div className="d-flex gap-2">
                               <button className="btn btn-sm btn-outline-primary" onClick={() => navigate(`/task/${sub.id}`, { state: { task: sub } })}>Open Subtask</button>
                               <button className="btn btn-sm btn-success" onClick={() => markSubtaskCompleted(sub)} disabled={updatingSubId === sub.id}>
-                                {updatingSubId === sub.id ? <><span className="spinner-border spinner-border-sm me-2" />Marking…</> : 'Mark completed'}
+                                {updatingSubId === sub.id ? <><img src="/assets/loading.gif" alt="Loading…" style={{ height: 64 }} className="me-2" />Marking…</> : 'Mark completed'}
                               </button>
                             </div>
                           </div>
@@ -393,7 +391,7 @@ export default function TaskDetail({ user, checkAuthStatus }) {
                 <h5 className="mb-0">Edit Task</h5>
                 <div>
                   <button className="btn btn-sm btn-success me-2" onClick={handleSave} disabled={!user || saving || nothingChanged()}>
-                    {saving ? <><span className="spinner-border spinner-border-sm me-2" />Saving…</> : 'Save Changes'}
+                    {saving ? <><img src="/assets/loading.gif" alt="Loading…" style={{ height: 64 }} className="me-2" />Saving…</> : 'Save Changes'}
                   </button>
                 </div>
               </div>
@@ -402,7 +400,7 @@ export default function TaskDetail({ user, checkAuthStatus }) {
               )}
               {metaLoading ? (
                 <div className="d-flex justify-content-center py-3">
-                  <div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading…</span></div>
+                  <img src="/assets/loading.gif" alt="Loading…" style={{ height: 128 }} />
                 </div>
               ) : (
                 <form onSubmit={e => { e.preventDefault(); handleSave(); }}>
@@ -455,7 +453,7 @@ export default function TaskDetail({ user, checkAuthStatus }) {
                 <div className="text-center text-muted">No GitHub repo links found in description.</div>
               ) : githubStatsLoading ? (
                 <div className="d-flex justify-content-center py-4">
-                  <div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading…</span></div>
+                  <img src="/assets/loading.gif" alt="Loading…" style={{ height: 160 }} />
                 </div>
               ) : (
                 repos.map((r) => {

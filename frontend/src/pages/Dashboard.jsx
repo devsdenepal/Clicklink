@@ -71,14 +71,14 @@ export default function Dashboard() {
       <div className="d-flex align-items-center justify-content-between mb-3">
         <h3 className="mb-0">Dashboard</h3>
         <button className="btn btn-outline-secondary btn-sm" onClick={load} disabled={loading}>
-          {loading ? <><span className="spinner-border spinner-border-sm me-2" />Loading…</> : 'Refresh'}
+          {loading ? <><img src="/assets/loading.gif" alt="Loading…" style={{ height: 64 }} className="me-2" />Loading…</> : 'Refresh'}
         </button>
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
       {loading && !tasks.length ? (
         <div className="d-flex justify-content-center py-5">
-          <div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading…</span></div>
+          <img src="/assets/loading.gif" alt="Loading…" style={{ height: 192 }} />
         </div>
       ) : (
         <>
