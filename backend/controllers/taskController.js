@@ -89,7 +89,7 @@ const updateTaskHandler = async (req, res) => {
     // Determine action detail (e.g., status change)
     let action = 'updated task';
     if (req.body && typeof req.body.status !== 'undefined') action = 'updated task status';
-    await logActivity({ user: req.user, action, task: { id: req.params.id, name: req.body?.name } });
+    await logActivity({ user: req.user, action, task: updated });
     res.json(updated);
   } catch (err) {
     console.error('Failed to update task:', err.response?.data || err.message);
