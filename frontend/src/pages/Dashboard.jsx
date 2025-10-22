@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/auth';
+import TaskTimeline from '../components/TaskTimeline';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -82,6 +83,9 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
+          {/* Timeline overview */}
+          <TaskTimeline className="mb-3" listId={listId} />
+
           {/* Status summary cards */}
           <div className="row g-3 mb-3">
             {['Open', 'In Progress', 'Review', 'Done'].map((key, idx) => (
