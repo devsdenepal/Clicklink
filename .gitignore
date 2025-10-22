@@ -13,3 +13,4 @@ backend/.env
 *.swp
 coverage/
 *.tmp
+*-lock.json

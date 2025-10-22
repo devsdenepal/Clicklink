@@ -6,6 +6,7 @@ import StatsCards from '../components/github/StatsCards';
 import CommitsChart from '../components/github/CommitsChart';
 import ContributorsList from '../components/github/ContributorsList';
 import { getToken } from '../utils/auth';
+import { FiGithub, FiLink2, FiCheckCircle, FiXCircle, FiRefreshCw, FiClock, FiAlertCircle } from 'react-icons/fi';
 
 export default function GitHubStats() {
   const [repos, setRepos] = useState([]);
@@ -59,8 +60,8 @@ export default function GitHubStats() {
       exit={{ opacity: 0, y: -6 }}
       transition={{ duration: 0.25 }}>
       <div className="d-flex align-items-center justify-content-between mb-3">
-        <h3 className="mb-0">GitHub Stats</h3>
-        <a className="btn btn-outline-light btn-sm" href={connectHref}>{repos.length ? 'Re-auth GitHub' : 'Connect GitHub'}</a>
+        <h3 className="mb-0 d-flex align-items-center gap-2"><FiGithub /> <span>GitHub Stats</span></h3>
+        <a className="btn btn-outline-light btn-sm d-flex align-items-center gap-1" href={connectHref}><FiLink2 /> {repos.length ? 'Re-auth GitHub' : 'Connect GitHub'}</a>
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
@@ -115,12 +116,17 @@ export default function GitHubStats() {
                           const st = d.latest_status;
                           const state = (st?.state || '').toLowerCase();
                           const badge = state === 'success' ? 'success' : state === 'failure' ? 'danger' : state === 'in_progress' ? 'info' : state === 'queued' ? 'secondary' : 'warning';
+                          const StatusIcon = state === 'success' ? FiCheckCircle
+                            : state === 'failure' ? FiXCircle
+                            : state === 'in_progress' ? FiRefreshCw
+                            : state === 'queued' ? FiClock
+                            : FiAlertCircle;
                           return (
                             <tr key={d.id}>
                               <td><span className="badge text-bg-dark me-2">{d.environment || '—'}</span></td>
                               <td><code>{d.ref || d.sha?.slice(0,7) || '—'}</code></td>
                               <td>
-                                {st ? <span className={`badge text-bg-${badge}`}>{st.state}</span> : <span className="badge text-bg-secondary">unknown</span>}
+                                {st ? <span className={`badge text-bg-${badge} d-inline-flex align-items-center gap-1`}><StatusIcon /> {st.state}</span> : <span className="badge text-bg-secondary">unknown</span>}
                               </td>
                               <td className="text-nowrap">{new Date(d.created_at).toLocaleString()}</td>
                             </tr>

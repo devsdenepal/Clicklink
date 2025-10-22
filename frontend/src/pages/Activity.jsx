@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { api } from '../utils/auth';
+import { FiActivity, FiPlusCircle, FiEdit2, FiTrash2, FiRefreshCw, FiFileText } from 'react-icons/fi';
 
 export default function Activity() {
   const [activities, setActivities] = useState([]);
@@ -34,11 +35,11 @@ export default function Activity() {
 
   const iconFor = (a) => {
     const s = (a?.action || '').toLowerCase();
-    if (s.includes('create')) return '🟢';
-    if (s.includes('edit') || s.includes('update')) return '🟡';
-    if (s.includes('delete') || s.includes('remove')) return '🔴';
-    if (s.includes('status')) return '🔁';
-    return '📝';
+    if (s.includes('create')) return <FiPlusCircle className="text-success" />;
+    if (s.includes('edit') || s.includes('update')) return <FiEdit2 className="text-warning" />;
+    if (s.includes('delete') || s.includes('remove')) return <FiTrash2 className="text-danger" />;
+    if (s.includes('status')) return <FiRefreshCw className="text-info" />;
+    return <FiFileText className="text-secondary" />;
   };
 
   const rows = useMemo(() => activities, [activities]);
@@ -52,7 +53,7 @@ export default function Activity() {
       transition={{ duration: 0.25 }}
     >
       <div className="d-flex align-items-center justify-content-between mb-3">
-        <h3 className="mb-0">Activity</h3>
+  <h3 className="mb-0 d-flex align-items-center gap-2"><FiActivity /> <span>Activity</span></h3>
         <div className="d-flex align-items-center gap-2">
           <select className="form-select form-select-sm w-auto" value={limit} onChange={(e) => setLimit(Number(e.target.value))}>
             {[20, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}

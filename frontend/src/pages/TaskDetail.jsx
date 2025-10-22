@@ -6,6 +6,7 @@ import StatsCards from '../components/github/StatsCards';
 import CommitsChart from '../components/github/CommitsChart';
 import ContributorsList from '../components/github/ContributorsList';
 import { getToken } from '../utils/auth';
+import { FiGithub, FiCheckCircle, FiXCircle, FiRefreshCw, FiClock, FiAlertCircle, FiExternalLink } from 'react-icons/fi';
 
 /**
  * TaskDetail
@@ -448,7 +449,7 @@ export default function TaskDetail({ user, checkAuthStatus }) {
         <div className="col-12 col-xl-10">
           <div className="mb-3">
     
-              <h4 className="text-center mb-3">GitHub</h4>
+              <h4 className="text-center mb-3 d-flex align-items-center justify-content-center gap-2"><FiGithub /> <span>GitHub</span></h4>
               {repos.length === 0 ? (
                 <div className="text-center text-muted">No GitHub repo links found in description.</div>
               ) : githubStatsLoading ? (
@@ -467,7 +468,7 @@ export default function TaskDetail({ user, checkAuthStatus }) {
                     <div key={r} className="mb-4">
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <strong>{r}</strong>
-                        <a className="btn btn-sm btn-outline-primary" href={`https://github.com/${r}`} target="_blank" rel="noreferrer">Open on GitHub</a>
+                        <a className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" href={`https://github.com/${r}`} target="_blank" rel="noreferrer"><FiExternalLink /> Open on GitHub</a>
                       </div>
                       {err ? (
                         <div className="alert alert-warning">
@@ -514,11 +515,16 @@ export default function TaskDetail({ user, checkAuthStatus }) {
                                       const st = d.latest_status;
                                       const state = (st?.state || '').toLowerCase();
                                       const badge = state === 'success' ? 'success' : state === 'failure' ? 'danger' : state === 'in_progress' ? 'info' : state === 'queued' ? 'secondary' : 'warning';
+                                      const StatusIcon = state === 'success' ? FiCheckCircle
+                                        : state === 'failure' ? FiXCircle
+                                        : state === 'in_progress' ? FiRefreshCw
+                                        : state === 'queued' ? FiClock
+                                        : FiAlertCircle;
                                       return (
                                         <tr key={d.id}>
                                           <td><span className="badge text-bg-dark me-2">{d.environment || '—'}</span></td>
                                           <td><code>{d.ref || d.sha?.slice(0,7) || '—'}</code></td>
-                                          <td>{st ? <span className={`badge text-bg-${badge}`}>{st.state}</span> : <span className="badge text-bg-secondary">unknown</span>}</td>
+                                          <td>{st ? <span className={`badge text-bg-${badge} d-inline-flex align-items-center gap-1`}><StatusIcon /> {st.state}</span> : <span className="badge text-bg-secondary">unknown</span>}</td>
                                           <td className="text-nowrap">{new Date(d.created_at).toLocaleString()}</td>
                                         </tr>
                                       );

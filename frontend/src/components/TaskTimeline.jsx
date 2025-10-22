@@ -12,6 +12,7 @@ import {
   ReferenceLine,
   Cell
 } from 'recharts';
+import { FiCheckCircle, FiAlertTriangle, FiXCircle, FiCalendar } from 'react-icons/fi';
 
 // Helper to normalize timestamps from ClickUp task objects
 function toMs(v) {
@@ -181,10 +182,10 @@ export default function TaskTimeline({ listId, className = '' }) {
         </div>
 
         <div className="mt-3 small text-muted d-flex align-items-center gap-3">
-          <span><span className="d-inline-block" style={{ width: 12, height: 12, background: '#28a745', borderRadius: 2, marginRight: 6 }} />On track</span>
-          <span><span className="d-inline-block" style={{ width: 12, height: 12, background: '#ffc107', borderRadius: 2, marginRight: 6 }} />At risk</span>
-          <span><span className="d-inline-block" style={{ width: 12, height: 12, background: '#dc3545', borderRadius: 2, marginRight: 6 }} />Overdue</span>
-          <span className="ms-auto">Range: {fmt(scale.startMin)} → {fmt(scale.endMax)}</span>
+          <span className="d-inline-flex align-items-center gap-1"><span className="d-inline-block" style={{ width: 12, height: 12, background: '#28a745', borderRadius: 2 }} /> <FiCheckCircle className="text-success" /> On track</span>
+          <span className="d-inline-flex align-items-center gap-1"><span className="d-inline-block" style={{ width: 12, height: 12, background: '#ffc107', borderRadius: 2 }} /> <FiAlertTriangle className="text-warning" /> At risk</span>
+          <span className="d-inline-flex align-items-center gap-1"><span className="d-inline-block" style={{ width: 12, height: 12, background: '#dc3545', borderRadius: 2 }} /> <FiXCircle className="text-danger" /> Overdue</span>
+          <span className="ms-auto d-inline-flex align-items-center gap-1"><FiCalendar /> Range: {fmt(scale.startMin)} → {fmt(scale.endMax)}</span>
         </div>
       </div>
     </div>

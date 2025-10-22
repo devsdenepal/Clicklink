@@ -1,13 +1,15 @@
 import React from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { FiGrid, FiList, FiActivity, FiUsers, FiSettings, FiUser, FiGithub, FiLogOut } from 'react-icons/fi';
 
 export default function MainLayout({ user, onLogout }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const LinkItem = ({ to, children }) => (
-    <NavLink to={to} className={({ isActive }) => 'nav-link text-light ' + (isActive ? 'active fw-semibold' : '')}>
-      {children}
+  const LinkItem = ({ to, icon: Icon, children }) => (
+    <NavLink to={to} className={({ isActive }) => 'nav-link text-light d-flex align-items-center gap-2 ' + (isActive ? 'active fw-semibold' : '')}>
+      {Icon ? <Icon className="opacity-75" /> : null}
+      <span className="text-truncate">{children}</span>
     </NavLink>
   );
 
@@ -22,14 +24,14 @@ export default function MainLayout({ user, onLogout }) {
             <span className="ms-2 fw-semibold text-light">Welcome back!</span>
           </div>
           <nav className="nav nav-pills flex-column px-2 py-2">
-            <LinkItem to="/dashboard">Dashboard</LinkItem>
-            <LinkItem to="/tasks">Tasks</LinkItem>
-            <LinkItem to="/activity">Activity</LinkItem>
-            <LinkItem to="/members">Members</LinkItem>
-            <LinkItem to="/settings">Settings</LinkItem>
-            <LinkItem to="/me">Profile</LinkItem>
+            <LinkItem to="/dashboard" icon={FiGrid}>Dashboard</LinkItem>
+            <LinkItem to="/tasks" icon={FiList}>Tasks</LinkItem>
+            <LinkItem to="/activity" icon={FiActivity}>Activity</LinkItem>
+            <LinkItem to="/members" icon={FiUsers}>Members</LinkItem>
+            <LinkItem to="/settings" icon={FiSettings}>Settings</LinkItem>
+            <LinkItem to="/me" icon={FiUser}>Profile</LinkItem>
             <hr className="border-secondary" />
-            <LinkItem to="/github-stats">GitHub Stats</LinkItem>
+            <LinkItem to="/github-stats" icon={FiGithub}>GitHub Stats</LinkItem>
           </nav>
         </div>
 
@@ -41,7 +43,10 @@ export default function MainLayout({ user, onLogout }) {
               <div />
               <div className="d-flex align-items-center gap-2">
                 {user && <span className="small text-secondary">{user.username || user.email}</span>}
-                <button className="btn btn-outline-light btn-sm" onClick={() => { onLogout?.(); navigate('/'); }}>Logout</button>
+                <button className="btn btn-outline-light btn-sm d-flex align-items-center gap-1" onClick={() => { onLogout?.(); navigate('/'); }}>
+                  <FiLogOut />
+                  <span>Logout</span>
+                </button>
               </div>
             </div>
           </div>
