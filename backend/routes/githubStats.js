@@ -84,12 +84,13 @@ router.get('/repo/:owner/:repo/stats', requireAuth, async (req, res) => {
     const { owner, repo } = req.params;
 
     // Fetch commits, issues, and pull requests
-    const [commitsRes, issuesOpenRes, issuesClosedRes, prsOpenRes, prsClosedRes] = await Promise.all([
-      axios.get(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=100`, { headers: ghHeaders(token) }),
-      axios.get(`https://api.github.com/repos/${owner}/${repo}/issues?state=open&per_page=100`, { headers: ghHeaders(token) }),
-      axios.get(`https://api.github.com/repos/${owner}/${repo}/issues?state=closed&per_page=100`, { headers: ghHeaders(token) }),
-      axios.get(`https://api.github.com/repos/${owner}/${repo}/pulls?state=open&per_page=100`, { headers: ghHeaders(token) }),
-      axios.get(`https://api.github.com/repos/${owner}/${repo}/pulls?state=closed&per_page=100`, { headers: ghHeaders(token) })
+    const [commitsRes, issuesOpenRes, issuesClosedRes, prsOpenRes, prsClosedRes, deploymentsRes] = await Promise.all([
+      axios.get(`${API_BASE}/repos/${owner}/${repo}/commits?per_page=100`, { headers: ghHeaders(token) }),
+      axios.get(`${API_BASE}/repos/${owner}/${repo}/issues?state=open&per_page=100`, { headers: ghHeaders(token) }),
+      axios.get(`${API_BASE}/repos/${owner}/${repo}/issues?state=closed&per_page=100`, { headers: ghHeaders(token) }),
+      axios.get(`${API_BASE}/repos/${owner}/${repo}/pulls?state=open&per_page=100`, { headers: ghHeaders(token) }),
+      axios.get(`${API_BASE}/repos/${owner}/${repo}/pulls?state=closed&per_page=100`, { headers: ghHeaders(token) }),
+      axios.get(`${API_BASE}/repos/${owner}/${repo}/deployments?per_page=20`, { headers: ghHeaders(token) })
     ]);
 
     const commits = commitsRes.data || [];
@@ -111,12 +112,58 @@ router.get('/repo/:owner/:repo/stats', requireAuth, async (req, res) => {
     const prsOpen = Array.isArray(prsOpenRes.data) ? prsOpenRes.data.length : 0;
     const prsClosed = Array.isArray(prsClosedRes.data) ? prsClosedRes.data.length : 0;
 
+    // Attach latest status for recent deployments (cap to 10 to limit requests)
+    let deployments = Array.isArray(deploymentsRes.data) ? deploymentsRes.data : [];
+    const recentDeploys = deployments.slice(0, 10);
+    try {
+      const statusResults = await Promise.all(recentDeploys.map(async (d) => {
+        try {
+          const st = await axios.get(`${API_BASE}/repos/${owner}/${repo}/deployments/${d.id}/statuses?per_page=1`, { headers: ghHeaders(token) });
+          const latest = Array.isArray(st.data) && st.data.length ? st.data[0] : null;
+          return { id: d.id, latest };
+        } catch (_) {
+          return { id: d.id, latest: null };
+        }
+      }));
+      const latestMap = new Map(statusResults.map(x => [x.id, x.latest]));
+      deployments = deployments.map(d => ({
+        id: d.id,
+        sha: d.sha,
+        ref: d.ref,
+        environment: d.environment,
+        creator: d.creator ? { login: d.creator.login } : null,
+        created_at: d.created_at,
+        updated_at: d.updated_at,
+        latest_status: latestMap.get(d.id) ? {
+          state: latestMap.get(d.id).state,
+          created_at: latestMap.get(d.id).created_at,
+          environment_url: latestMap.get(d.id).environment_url,
+          log_url: latestMap.get(d.id).log_url,
+          target_url: latestMap.get(d.id).target_url,
+          description: latestMap.get(d.id).description,
+        } : null
+      }));
+    } catch (_) {
+      // If statuses fail, return deployments without status
+      deployments = deployments.map(d => ({
+        id: d.id,
+        sha: d.sha,
+        ref: d.ref,
+        environment: d.environment,
+        creator: d.creator ? { login: d.creator.login } : null,
+        created_at: d.created_at,
+        updated_at: d.updated_at,
+        latest_status: null
+      }));
+    }
+
     res.json({
       commitsCount: commits.length,
       issues: { open: issuesOpen, closed: issuesClosed },
       prs: { open: prsOpen, closed: prsClosed },
       commitHistory,
-      contributors
+      contributors,
+      deployments
     });
   } catch (e) {
     const status = e.response?.status || 500;

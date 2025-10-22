@@ -6,7 +6,8 @@ export default function StatsCards({ stats }) {
     { label: 'Issues (Open)', value: stats?.issues?.open || 0 },
     { label: 'Issues (Closed)', value: stats?.issues?.closed || 0 },
     { label: 'PRs (Open)', value: stats?.prs?.open || 0 },
-    { label: 'PRs (Closed)', value: stats?.prs?.closed || 0 }
+    { label: 'PRs (Closed)', value: stats?.prs?.closed || 0 },
+    ...(Array.isArray(stats?.deployments) ? [{ label: 'Deployments', value: stats.deployments.length }] : [])
   ];
   return (
     <div className="row g-3 mb-3">

@@ -96,6 +96,41 @@ export default function GitHubStats() {
                   </div></div>
                 </div>
               </div>
+              {/* Recent deployments */}
+              {Array.isArray(stats.deployments) && stats.deployments.length > 0 && (
+                <div className="card mb-3"><div className="card-body">
+                  <h5 className="card-title">Recent deployments</h5>
+                  <div className="table-responsive">
+                    <table className="table table-sm align-middle">
+                      <thead>
+                        <tr>
+                          <th>Environment</th>
+                          <th>Ref</th>
+                          <th>Status</th>
+                          <th>Created</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stats.deployments.slice(0,5).map((d) => {
+                          const st = d.latest_status;
+                          const state = (st?.state || '').toLowerCase();
+                          const badge = state === 'success' ? 'success' : state === 'failure' ? 'danger' : state === 'in_progress' ? 'info' : state === 'queued' ? 'secondary' : 'warning';
+                          return (
+                            <tr key={d.id}>
+                              <td><span className="badge text-bg-dark me-2">{d.environment || '—'}</span></td>
+                              <td><code>{d.ref || d.sha?.slice(0,7) || '—'}</code></td>
+                              <td>
+                                {st ? <span className={`badge text-bg-${badge}`}>{st.state}</span> : <span className="badge text-bg-secondary">unknown</span>}
+                              </td>
+                              <td className="text-nowrap">{new Date(d.created_at).toLocaleString()}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div></div>
+              )}
             </>
           ) : (
             <div className="text-muted mt-3">No stats available.</div>

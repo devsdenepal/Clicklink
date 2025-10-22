@@ -1,7 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../utils/auth';
+import StatsCards from '../components/github/StatsCards';
+import CommitsChart from '../components/github/CommitsChart';
+import ContributorsList from '../components/github/ContributorsList';
+import { getToken } from '../utils/auth';
 
 /**
  * TaskDetail
@@ -24,6 +28,10 @@ export default function TaskDetail({ user, checkAuthStatus }) {
   const [task, setTask] = useState(null);
   const [repos, setRepos] = useState([]);
   const [githubData, setGithubData] = useState({});
+  const [githubStats, setGithubStats] = useState({}); // { 'owner/repo': stats }
+  const [githubStatsLoading, setGithubStatsLoading] = useState(false);
+  const [githubStatsError, setGithubStatsError] = useState(null);
+  const [ghTokenMissing, setGhTokenMissing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -137,6 +145,27 @@ export default function TaskDetail({ user, checkAuthStatus }) {
           }
         }
         if (mounted) setGithubData(gdata);
+
+        // Fetch GitHub stats (requires GitHub auth on backend)
+        if (reposList && reposList.length) {
+          setGithubStatsLoading(true);
+          setGithubStatsError(null);
+          const statsMap = {};
+          for (const r of reposList) {
+            try {
+              const [owner, repo] = r.split('/');
+              const res = await api.get(`/api/github/repo/${owner}/${repo}/stats`);
+              const data = await res.json();
+              statsMap[r] = data;
+            } catch (e) {
+              const msg = e?.message || '';
+              if (/github token missing/i.test(msg)) setGhTokenMissing(true);
+              statsMap[r] = { error: msg || 'Failed to load repo stats' };
+            }
+          }
+          if (mounted) setGithubStats(statsMap);
+          if (mounted) setGithubStatsLoading(false);
+        }
       } catch (e) {
         if (mounted) setError(String(e));
       } finally {
@@ -412,59 +441,106 @@ export default function TaskDetail({ user, checkAuthStatus }) {
             </div>
           </div>
 
-          <h5>GitHub</h5>
-          {repos.length === 0 && <div className="text-muted">No GitHub repo links found in description.</div>}
-          {repos.map(r => {
-            const gd = githubData[r];
-            return (
-              <div key={r} className="card mb-3 bg-body-secondary">
-                <div className="card-body">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div>
-                      <strong>{r}</strong>
-                      {gd && gd.repo && (
-                        <div className="small text-muted">⭐ {gd.repo.stargazers_count} · Issues: {gd.repo.open_issues_count} · Updated: {new Date(gd.repo.updated_at).toLocaleString()}</div>
-                      )}
-                    </div>
-                    <div>
-                      <a className="btn btn-sm btn-outline-primary me-2" href={`https://github.com/${r}`} target="_blank" rel="noreferrer">Open in GitHub</a>
-                    </div>
-                  </div>
-
-                  <hr />
-
-                  {gd && gd.error && <div className="text-danger">{gd.error}</div>}
-                  {gd && gd.issues && (
-                    <div>
-                      <h6>Open issues</h6>
-                      <ul className="list-group">
-                        {gd.issues
-                          .filter(issue => !subtasksIndex.has(`${r}#${issue.number}`))
-                          .map(issue => (
-                          <li key={issue.id} className="list-group-item d-flex justify-content-between align-items-start">
-                            <div>
-                              <div><strong>#{issue.number}</strong> {issue.title}</div>
-                              <div className="small text-muted">{issue.user && issue.user.login}</div>
-                            </div>
-                            <div>
-                              <button className="btn btn-sm btn-outline-primary me-2" onClick={() => window.open(issue.html_url, '_blank')}>Open</button>
-                              {user ? (
-                                <button className="btn btn-sm btn-success" onClick={() => createSubtaskFromIssue(r, issue.number)}>Create Subtask</button>
-                              ) : (
-                                <button className="btn btn-sm btn-secondary" disabled title="Connect ClickUp to create subtasks">Create Subtask</button>
-                              )}
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          {/* Removed old per-repo GitHub issues panel; consolidated into the centered section below */}
         </div>
       </div>
+
+      {/* GitHub Stats section (centered, below existing content) */}
+      <div className="row  mt-4">
+        <div className="col-12 col-xl-10">
+          <div className="mb-3">
+    
+              <h4 className="text-center mb-3">GitHub</h4>
+              {repos.length === 0 ? (
+                <div className="text-center text-muted">No GitHub repo links found in description.</div>
+              ) : githubStatsLoading ? (
+                <div className="d-flex justify-content-center py-4">
+                  <div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading…</span></div>
+                </div>
+              ) : (
+                repos.map((r) => {
+                  const stats = githubStats[r];
+                  const err = stats && stats.error;
+                  const connectHref = (() => {
+                    const t = getToken();
+                    return t ? `/auth/github?carry=${encodeURIComponent(t)}` : '/auth/github';
+                  })();
+                  return (
+                    <div key={r} className="mb-4">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <strong>{r}</strong>
+                        <a className="btn btn-sm btn-outline-primary" href={`https://github.com/${r}`} target="_blank" rel="noreferrer">Open on GitHub</a>
+                      </div>
+                      {err ? (
+                        <div className="alert alert-warning">
+                          {ghTokenMissing ? (
+                            <>
+                              GitHub connection required to view stats. <a href={connectHref} className="alert-link">Connect GitHub</a>
+                            </>
+                          ) : (
+                            <>Failed to load stats: {String(err)}</>
+                          )}
+                        </div>
+                      ) : stats ? (
+                        <>
+                          <StatsCards stats={stats} />
+                          <div className="row g-3">
+                            <div className="col-12 col-lg-8">
+                              <div className="card mb-3"><div className="card-body">
+                                <h5 className="card-title">Commit history</h5>
+                                <CommitsChart data={stats.commitHistory || []} />
+                              </div></div>
+                            </div>
+                            <div className="col-12 col-lg-4">
+                              <div className="card mb-3"><div className="card-body">
+                                <h5 className="card-title">Top contributors</h5>
+                                <ContributorsList contributors={stats.contributors || []} />
+                              </div></div>
+                            </div>
+                          </div>
+                          {Array.isArray(stats.deployments) && stats.deployments.length > 0 && (
+                            <div className="card mb-3"><div className="card-body">
+                              <h5 className="card-title">Recent deployments</h5>
+                              <div className="table-responsive">
+                                <table className="table table-sm align-middle">
+                                  <thead>
+                                    <tr>
+                                      <th>Environment</th>
+                                      <th>Ref</th>
+                                      <th>Status</th>
+                                      <th>Created</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {stats.deployments.slice(0,5).map((d) => {
+                                      const st = d.latest_status;
+                                      const state = (st?.state || '').toLowerCase();
+                                      const badge = state === 'success' ? 'success' : state === 'failure' ? 'danger' : state === 'in_progress' ? 'info' : state === 'queued' ? 'secondary' : 'warning';
+                                      return (
+                                        <tr key={d.id}>
+                                          <td><span className="badge text-bg-dark me-2">{d.environment || '—'}</span></td>
+                                          <td><code>{d.ref || d.sha?.slice(0,7) || '—'}</code></td>
+                                          <td>{st ? <span className={`badge text-bg-${badge}`}>{st.state}</span> : <span className="badge text-bg-secondary">unknown</span>}</td>
+                                          <td className="text-nowrap">{new Date(d.created_at).toLocaleString()}</td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div></div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-muted">No stats available.</div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
     </motion.div>
   );
 }
