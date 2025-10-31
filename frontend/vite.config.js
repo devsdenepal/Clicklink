@@ -8,12 +8,12 @@ export default defineConfig({
     proxy: {
       // Forward API and auth requests to backend during development
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://clicklink-flax.vercel.app',
         changeOrigin: true,
         secure: false,
       },
       '/auth': {
-        target: 'http://localhost:5000',
+        target: 'https://clicklink-flax.vercel.app',
         changeOrigin: true,
         secure: false,
       }
