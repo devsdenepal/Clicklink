@@ -39,6 +39,9 @@ app.use('/api/activity', activityRoutes);
 app.get('/health', (req, res) => {
   res.json({ ok: true });
 });
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to the Backend API' });
+});
 
 // Error Handler
 app.use(errorHandler);
