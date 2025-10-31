@@ -5,7 +5,7 @@ import RepoSelect from '../components/github/RepoSelect';
 import StatsCards from '../components/github/StatsCards';
 import CommitsChart from '../components/github/CommitsChart';
 import ContributorsList from '../components/github/ContributorsList';
-import { getToken } from '../utils/auth';
+import { getToken, BACKEND_URL } from '../utils/auth';
 import { FiGithub, FiLink2, FiCheckCircle, FiXCircle, FiRefreshCw, FiClock, FiAlertCircle } from 'react-icons/fi';
 
 export default function GitHubStats() {
@@ -50,7 +50,7 @@ export default function GitHubStats() {
 
   const connectHref = useMemo(() => {
     const t = getToken();
-    return t ? `/auth/github?carry=${encodeURIComponent(t)}` : '/auth/github';
+    return t ? `${BACKEND_URL}/auth/github?carry=${encodeURIComponent(t)}` : `${BACKEND_URL}/auth/github`;
   }, []);
 
   return (

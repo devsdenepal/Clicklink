@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { getToken, isTokenExpired, removeToken } from '../utils/auth';
+import { getToken, isTokenExpired, removeToken, BACKEND_URL } from '../utils/auth';
 import { SiClickup } from 'react-icons/si';
 
 export default function Login() {
@@ -21,7 +21,7 @@ export default function Login() {
 
   const handleLogin = () => {
     // Kick off ClickUp OAuth via backend
-    window.location.href = '/auth/clickup';
+    window.location.href = `${BACKEND_URL}/auth/clickup`;
   };
 
   return (

@@ -5,7 +5,7 @@ import { api } from '../utils/auth';
 import StatsCards from '../components/github/StatsCards';
 import CommitsChart from '../components/github/CommitsChart';
 import ContributorsList from '../components/github/ContributorsList';
-import { getToken } from '../utils/auth';
+import { getToken, BACKEND_URL } from '../utils/auth';
 import { FiGithub, FiCheckCircle, FiXCircle, FiRefreshCw, FiClock, FiAlertCircle, FiExternalLink } from 'react-icons/fi';
 
 /**
@@ -320,7 +320,7 @@ export default function TaskDetail({ user, checkAuthStatus }) {
     <div className="container mt-3">
       <div className="alert alert-warning">{error}</div>
       <div className="mb-3">If you want to create subtasks from GitHub issues, please connect ClickUp.</div>
-      <a className="btn btn-primary" href="/auth/clickup">Connect ClickUp</a>
+              <a className="btn btn-primary" href={`${BACKEND_URL}/auth/clickup`}>Connect ClickUp</a>
     </div>
   );
 
@@ -462,7 +462,7 @@ export default function TaskDetail({ user, checkAuthStatus }) {
                   const err = stats && stats.error;
                   const connectHref = (() => {
                     const t = getToken();
-                    return t ? `/auth/github?carry=${encodeURIComponent(t)}` : '/auth/github';
+                    return t ? `${BACKEND_URL}/auth/github?carry=${encodeURIComponent(t)}` : `${BACKEND_URL}/auth/github`;
                   })();
                   return (
                     <div key={r} className="mb-4">

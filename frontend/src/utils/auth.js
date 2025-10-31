@@ -1,5 +1,5 @@
 const TOKEN_KEY = 'auth_token';
-const BACKEND_URL = 'https://clicklink-flax.vercel.app';
+export const BACKEND_URL = 'https://clicklink-flax.vercel.app';
 
 const getToken = () => localStorage.getItem(TOKEN_KEY);
 
