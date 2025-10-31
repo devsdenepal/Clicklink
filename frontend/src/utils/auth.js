@@ -1,5 +1,5 @@
-// Auth utility functions
 const TOKEN_KEY = 'auth_token';
+const BACKEND_URL = 'https://clicklink-flax.vercel.app';
 
 const getToken = () => localStorage.getItem(TOKEN_KEY);
 
@@ -24,10 +24,8 @@ const isTokenExpired = (token) => {
   }
 };
 
-// Common error handler for API responses
 const handleResponse = async (res) => {
   if (res.ok) return res;
-
   const contentType = res.headers.get('content-type');
   let body = null;
   if (contentType && contentType.includes('application/json')) {
@@ -37,7 +35,6 @@ const handleResponse = async (res) => {
   }
 
   let message = (body && (body.error || body.message)) || (typeof body === 'string' ? body : 'Request failed');
-  // If backend provided 'details', include it in the message to aid debugging
   if (body && body.details) {
     const det = typeof body.details === 'string' ? body.details : (body.details.message || JSON.stringify(body.details));
     if (det && det !== message) message += `: ${det}`;
@@ -52,37 +49,36 @@ const handleResponse = async (res) => {
   if (res.status === 401) {
     if (err.code === 'TOKEN_EXPIRED' || err.code === 'TOKEN_INVALID') {
       removeToken();
-      window.location.href = '/'; // Redirect to login
+      window.location.href = '/';
     }
   }
 
   throw err;
 };
 
-// API client with auth header and error handling
 const api = {
-  get: async (url) => {
+  get: async (route) => {
     const token = getToken();
     if (token && isTokenExpired(token)) {
       removeToken();
       window.location.href = '/';
       throw new Error('Token expired');
     }
-
+    const url = `${BACKEND_URL}${route}`;
     const res = await fetch(url, {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {}
     });
     return handleResponse(res);
   },
 
-  post: async (url, data) => {
+  post: async (route, data) => {
     const token = getToken();
     if (token && isTokenExpired(token)) {
       removeToken();
       window.location.href = '/';
       throw new Error('Token expired');
     }
-
+    const url = `${BACKEND_URL}${route}`;
     const res = await fetch(url, {
       method: 'POST',
       headers: {
@@ -94,14 +90,14 @@ const api = {
     return handleResponse(res);
   },
 
-  put: async (url, data) => {
+  put: async (route, data) => {
     const token = getToken();
     if (token && isTokenExpired(token)) {
       removeToken();
       window.location.href = '/';
       throw new Error('Token expired');
     }
-
+    const url = `${BACKEND_URL}${route}`;
     const res = await fetch(url, {
       method: 'PUT',
       headers: {
