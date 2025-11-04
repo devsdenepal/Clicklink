@@ -72,7 +72,12 @@ export default function Dashboard() {
       <div className="d-flex align-items-center justify-content-between mb-3">
         <h3 className="mb-0">Dashboard</h3>
         <button className="btn btn-outline-secondary btn-sm" onClick={load} disabled={loading}>
-          {loading ? <><img src="/assets/loading.gif" alt="Loading…" style={{ height: 64 }} className="me-2" />Loading…</> : 'Refresh'}
+          {loading ? (
+            <>
+              <span className="spinner-border spinner-border-sm text-secondary me-2" role="status" aria-hidden="true" />
+              Loading…
+            </>
+          ) : 'Refresh'}
         </button>
       </div>
 

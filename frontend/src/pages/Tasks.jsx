@@ -111,7 +111,12 @@ export default function TasksPage({ user }) {
           </div>
           <button className="btn btn-outline-secondary me-2" onClick={() => setShowModal(true)}>New Task</button>
           <button className="btn btn-primary" onClick={handleSyncAll} disabled={syncing}>
-            {syncing ? <><img src="/assets/loading.gif" alt="Loading…" style={{ height: 64 }} className="me-2" />Syncing…</> : 'Sync All'}
+            {syncing ? (
+              <>
+                <span className="spinner-border spinner-border-sm text-light me-2" role="status" aria-hidden="true" />
+                Syncing…
+              </>
+            ) : 'Sync All'}
           </button>
         </div>
       </div>

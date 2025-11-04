@@ -59,7 +59,12 @@ export default function Activity() {
             {[20, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
           </select>
           <button className="btn btn-outline-secondary btn-sm" onClick={load} disabled={loading}>
-            {loading ? (<><img src="/assets/loading.gif" alt="Loading…" style={{ height: 64 }} className="me-2" />Loading…</>) : 'Refresh'}
+            {loading ? (
+              <>
+                <span className="spinner-border spinner-border-sm text-secondary me-2" role="status" aria-hidden="true" />
+                Loading…
+              </>
+            ) : 'Refresh'}
           </button>
         </div>
       </div>
