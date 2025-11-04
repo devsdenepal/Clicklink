@@ -143,7 +143,7 @@ export default function TaskTimeline({ listId, className = '' }) {
       <div className="card-body">
         <div className="d-flex justify-content-between align-items-center mb-2">
           <h5 className="mb-0">Task Timeline (Waterfall)</h5>
-          <div className="small text-muted">{rows.length} tasks</div>
+          <div className="small">{rows.length} tasks</div>
         </div>
 
         <div className="w-100" style={{ height }}>
@@ -164,7 +164,7 @@ export default function TaskTimeline({ listId, className = '' }) {
                   if (!d) return [''];
                   return [`${fmt(d.start)} → ${fmt(d.end)}`, ''];
                 }}
-                contentStyle={{ background: '#151b23', border: '1px solid rgba(255,255,255,0.12)' }}
+                contentStyle={{ color: '#fff', background: '#151b23', border: '1px solid rgba(255,255,255,0.12)' }}
               />
               {/* Today marker */}
               <ReferenceLine x={todayX} stroke="#dc3545" strokeWidth={2} ifOverflow="extendDomain" />
