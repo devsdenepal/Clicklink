@@ -40,6 +40,7 @@ export default function TaskDetail({ user, checkAuthStatus }) {
   const [subtasks, setSubtasks] = useState([]);
   const [expanded, setExpanded] = useState(new Set());
   const [updatingSubId, setUpdatingSubId] = useState(null);
+  const [creatingIssue, setCreatingIssue] = useState(null);
   // Edit controls
   const [members, setMembers] = useState([]);
   const [statuses, setStatuses] = useState([]);
@@ -542,6 +543,56 @@ export default function TaskDetail({ user, checkAuthStatus }) {
                                   </tbody>
                                 </table>
                               </div>
+                            </div></div>
+                          )}
+                          {/* Issues suggestion panel: show open issues and allow creating subtasks for ones not already linked */}
+                          {githubData[r] && Array.isArray(githubData[r].issues) && (
+                            <div className="card mt-3"><div className="card-body">
+                              <h6 className="card-title">Open Issues</h6>
+                              <ul className="list-unstyled small">
+                                {githubData[r].issues.map(i => {
+                                  const key = `${r}#${i.number}`;
+                                  const already = subtasksIndex.has(key);
+                                  return (
+                                    <li key={i.id} className="mb-2">
+                                      <div className="d-flex justify-content-between align-items-start">
+                                        <div>
+                                          <strong>#{i.number}</strong> {i.title}
+                                        </div>
+                                        <div>
+                                          {already ? (
+                                            <span className="badge bg-success">Linked</span>
+                                          ) : (
+                                            <>
+                                              <button className="btn btn-sm btn-primary me-2" onClick={async () => {
+                                                try {
+                                                  if (creatingIssue) return;
+                                                  setCreatingIssue(key);
+                                                  await createSubtaskFromIssue(r, i.number);
+                                                  // mark as linked locally
+                                                  setSubtasksIndex(prev => new Set(prev).add(key));
+                                                  setTimeout(() => setCreatingIssue(null), 300);
+                                                } catch (e) {
+                                                  setError(String(e));
+                                                  setCreatingIssue(null);
+                                                }
+                                              }} disabled={!!creatingIssue}>
+                                                {creatingIssue === key ? (
+                                                  <>
+                                                    <span className="spinner-border spinner-border-sm text-light me-2" role="status" aria-hidden="true" />
+                                                    Creating…
+                                                  </>
+                                                ) : 'Create Subtask'}
+                                              </button>
+                                              <a className="btn btn-sm btn-outline-secondary" href={i.html_url} target="_blank" rel="noreferrer">Open</a>
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
                             </div></div>
                           )}
                         </>
