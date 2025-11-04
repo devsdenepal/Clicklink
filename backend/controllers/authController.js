@@ -47,7 +47,18 @@ const handleCallback = async (req, res) => {
   res.clearCookie('oauthState');
   
   if (!code || state !== savedState) {
-    return res.status(400).send('Invalid state or missing code');
+    console.warn('OAuth state mismatch', { incomingState: state, savedState, host: req.headers.host, referer: req.headers.referer });
+
+    // If an explicit fallback is allowed via env, proceed (LESS SECURE)
+    const allowFallback = String(process.env.ALLOW_OAUTH_FALLBACK || '').toLowerCase() === 'true';
+    if (allowFallback && code) {
+      console.warn('ALLOW_OAUTH_FALLBACK is enabled — proceeding despite state mismatch (insecure).');
+      // continue into token exchange
+    } else {
+      // Redirect back to frontend with an error query so the UI can show a helpful message.
+      const redirectErrUrl = (FRONTEND_URL || '/') + (FRONTEND_URL && !(FRONTEND_URL.includes('?')) ? '?' : '&') + 'oauth_error=state_mismatch';
+      return res.redirect(redirectErrUrl);
+    }
   }
 
   try {
