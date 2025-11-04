@@ -25,7 +25,12 @@ export default function Dashboard() {
       setTasks(Array.isArray(tJson.tasks) ? tJson.tasks : []);
       setStatuses(Array.isArray(sJson.statuses) ? sJson.statuses : []);
     } catch (e) {
-      setError(e?.message || 'Failed to load dashboard');
+      // If backend indicates the user is not a member of the required workspace, show a helpful message
+      if (e && e.code === 'TEAM_MISMATCH') {
+        setError('Your ClickUp account is not a member of the workspace configured for this app. Please request access to the workspace or ask the workspace admin to add you.');
+      } else {
+        setError(e?.message || 'Failed to load dashboard');
+      }
       if (e && e.status === 401) navigate('/');
     } finally {
       setLoading(false);

@@ -71,11 +71,15 @@ const handleCallback = async (req, res) => {
     });
 
     // Create user object with ClickUp data and token
+    const cuUser = userRes.data.user || {};
+    // teams is an array of team objects: { id, name }
+    const teams = Array.isArray(cuUser.teams) ? cuUser.teams.map(t => ({ id: t.id, name: t.name })) : [];
     const user = {
-      id: userRes.data.user.id,
-      username: userRes.data.user.username,
-      email: userRes.data.user.email,
-      clickupToken: tokenRes.data.access_token
+      id: cuUser.id,
+      username: cuUser.username,
+      email: cuUser.email,
+      clickupToken: tokenRes.data.access_token,
+      teams
     };
 
     // Generate JWT
@@ -108,13 +112,18 @@ const getUser = async (req, res) => {
     });
     
     const userData = userRes.data.user;
+    const teams = Array.isArray(userData.teams)
+      ? userData.teams.map(t => ({ id: t.id, name: t.name }))
+      : (req.user && Array.isArray(req.user.teams) ? req.user.teams : []);
+
     res.json({
       user: {
         id: userData.id,
         username: userData.username,
         email: userData.email,
         color: userData.color,
-        profilePicture: userData.profilePicture
+        profilePicture: userData.profilePicture,
+        teams
       }
     });
   } catch (err) {

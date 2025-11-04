@@ -26,7 +26,11 @@ export default function TasksPage({ user }) {
       const data = await res.json();
       setTasks(data.tasks || []);
     } catch (err) {
-      setError(err?.message || 'Failed to load tasks');
+      if (err && err.code === 'TEAM_MISMATCH') {
+        setError('Your ClickUp account is not a member of the workspace configured for this app. Please request access or use a workspace that has been added.');
+      } else {
+        setError(err?.message || 'Failed to load tasks');
+      }
     } finally {
       setLoading(false);
     }

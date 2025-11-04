@@ -6,12 +6,16 @@ function generateToken(user) {
   if (!user.clickupToken) {
     throw new Error('ClickUp token is required');
   }
-  return jwt.sign({ 
+  // Include optional teams array (ids) if present so we can validate workspace membership
+  const payload = {
     id: user.id,
     email: user.email,
     username: user.username,
     clickupToken: user.clickupToken // Include ClickUp token in JWT
-  }, JWT_SECRET, { expiresIn: '7d' });
+  };
+  if (user.teams) payload.teams = user.teams;
+  if (user.team) payload.team = user.team;
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 }
 
 // Generic signer to support adding githubToken or merging payloads
