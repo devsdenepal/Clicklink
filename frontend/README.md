@@ -1,16 +1,39 @@
-# React + Vite
+# Clicklink Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Clicklink SPA built with **React 19 + Vite**.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- ClickUp OAuth login flow with token handling
+- Dashboard, Tasks, Task Detail, Profile, Settings, Activity pages
+- GitHub Stats view: commit charts, contributors, repo tabs
+- Animated transitions (Framer Motion), styled with Bootstrap
 
-## React Compiler
+## Development
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev            # http://localhost:5173
+```
 
-## Expanding the ESLint configuration
+## Configuration
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The API base URL is read from `VITE_BACKEND_URL` (defaults to `http://localhost:5000`):
+
+```bash
+echo "VITE_BACKEND_URL=http://localhost:5000" > .env      # local
+echo "VITE_BACKEND_URL=https://your-api.example.com" > .env # deployed
+```
+
+## Scripts
+
+| Script       | Purpose                    |
+| ------------ | -------------------------- |
+| `npm run dev`    | Start Vite dev server  |
+| `npm run build`  | Production build       |
+| `npm run preview`| Preview the build      |
+| `npm run lint`   | ESLint checks          |
+
+## Deploy
+
+`vercel.json` is preconfigured for static SPA hosting. Build output is `dist/`.
